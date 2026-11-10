@@ -2062,7 +2062,10 @@ async function mkdirs(d, path, seen) {
     const full = parent + '/' + seg;
     if (!seen.has(full)) {
       seen.add(full);
-      try { await formSubmit(`http://${httpHost(d)}/mkdir`, { name: seg, path: parent || '/' }, null, 4000); } catch { }
+      try {
+        if (location.protocol === 'https:') await fetch(`http://${httpHost(d)}/mkdir`, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `name=${encodeURIComponent(seg)}&path=${encodeURIComponent(parent || '/')}` });
+        else await formSubmit(`http://${httpHost(d)}/mkdir`, { name: seg, path: parent || '/' }, null, 4000);
+      } catch { }
     }
     parent = full;
   }
@@ -2120,7 +2123,8 @@ async function wifiDoctor(host, port) {
   const env = `${location.protocol}//${location.host || '(saved file)'} · secure context ${window.isSecureContext} · ${/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/.test(navigator.userAgent) ? 'iOS' : 'desktop'} · Chrome ${(navigator.userAgent.match(/Chrome\/(\d+)/) || [, '?'])[1]}`;
   const h = await httpProbe(host), w = await wsProbe(host, port);
   let verdict;
-  if (h.ok && w.ok) verdict = 'WORKS: this page can reach the reader and upload to it. A file named xteink-test.txt is now in the reader’s root folder (delete it later). If sending still fails, copy this report to me.';
+  if (!h.ok && !w.ok && location.protocol === 'content:') verdict = 'BLOCKED BY THE BROWSER: this page was opened from Android’s Downloads (content://), and Chrome refuses to let such pages reach devices on your Wi-Fi (the failure was instant). FIX — try in order: (A) in Chrome’s address bar type file:///storage/emulated/0/Download/library.html (change the folder if you saved it elsewhere) and open the library from there; (B) if A says access denied, put library.html on a free https host (Netlify Drop, GitHub Pages or Cloudflare Pages) and open that address — only this one file is hosted, your books stay on your phone — then press Diagnose again and choose Allow when Chrome asks for local network access.';
+  else if (h.ok && w.ok) verdict = 'WORKS: this page can reach the reader and upload to it. A file named xteink-test.txt is now in the reader’s root folder (delete it later). If sending still fails, copy this report to me.';
   else if (h.ok) verdict = 'The reader’s web server answers, but the fast WebSocket upload channel does not. Likely stock firmware or a different port. Use “Web upload via browser form”, or set the correct port.';
   else if (w.ok) verdict = 'WebSocket works (the reader’s page itself didn’t answer a plain request, but uploads should still work).';
   else verdict = 'This page cannot reach the reader at all. The reader page opening in a normal tab means the reader is fine, so the browser or phone is blocking this page: (1) Android may be sending this page’s traffic over mobile data because the reader’s Wi-Fi has no internet — turn mobile data off; (2) Chrome’s Local network access permission may be denied for this page — Chrome › site settings; (3) a VPN or private DNS can break .local names — try the reader’s IP address instead of crosspoint.local.';
@@ -2131,16 +2135,17 @@ function sendDialog(list) {
   const d = Object.assign({ type: 'auto', host: 'crosspoint.local', port: 81, path: '/Books', fmt: 'auto', convert: true }, prefs.dev);
   const sel = new Set(list.map(b => b.id)), sorted = [...books].sort(titleCmp), STAGE = 'Send to reader';
   let embedded = false; try { embedded = window.top !== window; } catch { embedded = true; }
-  const envWarn = (location.protocol === 'https:' ? '<p class="warn">This library is open from an <b>https://</b> address, so the browser refuses to load the reader (plain http) inside it.</p>' : '') +
-    (embedded ? '<p class="warn">This library is running inside another page or app viewer, which normally blocks pop-ups and the reader page.</p>' : '') +
-    (location.protocol === 'https:' || embedded ? '<p class="mute" style="font-size:12px">Fix: save library.html to your device and open it straight from the file manager in Chrome (the address starts with file://). Until then, use step 1 here, then open the reader address in a normal browser tab yourself and upload from the prepared folder.</p>' : '');
+  const envWarn = (location.protocol === 'content:' ? '<p class="warn">This page was opened from Android’s Downloads (<b>content://</b>). Chrome blocks pages opened that way from reaching devices on your Wi-Fi — that is why Wi-Fi sending fails. Run <b>Diagnose Wi-Fi</b> for the fix steps.</p>' : '') +
+    (location.protocol === 'https:' ? '<p class="mute" style="font-size:12px">Chrome will ask permission to connect to devices on your local network when you press Diagnose or send — choose <b>Allow</b>. The reader page can’t be shown inside this page; use Pop out.</p>' : '') +
+    (embedded ? '<p class="warn">This library is running inside another page or app viewer, which normally blocks pop-ups and the reader page.</p>' : '');
   const box = modal(`<h3>Send to eReader</h3>${envWarn}
     <div class="xf"><div>
       <input id="x_q" placeholder="Search your library…" spellcheck="false"><div class="xlist" id="x_list"></div><div class="mute" id="x_cnt"></div>
       <label class="l">File to send</label><select id="x_fmt"><option value="auto">EPUB first, else XTCH/XTC, else TXT</option><option value="xtc">XTCH/XTC first, else EPUB, else TXT</option><option value="all">Every reader-ready format</option></select>
       <label class="opt"><input type="checkbox" id="x_cv"${d.convert ? ' checked' : ''}> No EPUB/XTC? Convert CBZ → EPUB (not saved to the library)</label>
-      <label class="l">Copy straight to an SD card or folder</label><select id="x_lay"><option value="">All files in the chosen folder</option><option value="{author}">Folder per author</option><option value="{author}/{series}">Author / Series folders</option></select>
-      <div class="btns"><button class="primary" id="x_sd">Copy to SD card / folder…</button><button id="x_stage">Prepare files for upload</button><button id="x_dl">Download instead</button></div><div id="x_res" style="min-height:1.4em"></div><pre id="x_rep" style="white-space:pre-wrap;font-size:11px;user-select:text;margin:6px 0 0"></pre>
+      <label class="l">Folder on the reader (Wi-Fi) — {author}, {series} work</label><input id="x_path" value="${esc(d.path)}" spellcheck="false">
+      <label class="l">Or copy straight to an SD card or folder</label><select id="x_lay"><option value="">All files in the chosen folder</option><option value="{author}">Folder per author</option><option value="{author}/{series}">Author / Series folders</option></select>
+      <div class="btns"><button class="primary" id="x_wifi">Send over Wi-Fi</button><button id="x_sd">Copy to SD card / folder…</button><button id="x_stage">Prepare files for upload</button><button id="x_dl">Download instead</button></div><div id="x_res" style="min-height:1.4em"></div><pre id="x_rep" style="white-space:pre-wrap;font-size:11px;user-select:text;margin:6px 0 0"></pre>
     </div><div>
       <label class="l" style="margin-top:0">2. Reader page — use the IP shown on the reader if the name doesn’t work</label>
       <div class="xrow"><input id="x_host" value="${esc(d.host)}" spellcheck="false"><button id="x_go" class="primary">Open</button><button id="x_pop">Pop out ↗</button></div>
@@ -2159,7 +2164,7 @@ function sendDialog(list) {
   q('#x_q').oninput = draw; draw();
   q('#x_list').onchange = e => { const c = e.target.closest('[data-id]'); if (!c) return; c.checked ? sel.add(c.dataset.id) : sel.delete(c.dataset.id); q('#x_cnt').textContent = `${sel.size} selected`; };
   const url = () => 'http://' + (q('#x_host').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '') || 'crosspoint.local') + '/';
-  const save = () => { Object.assign(d, { host: q('#x_host').value.trim() || 'crosspoint.local', fmt: q('#x_fmt').value, convert: q('#x_cv').checked }); prefs.dev = { ...d }; savePrefs(); };
+  const save = () => { Object.assign(d, { path: q('#x_path').value.trim() || '/', host: q('#x_host').value.trim() || 'crosspoint.local', fmt: q('#x_fmt').value, convert: q('#x_cv').checked }); prefs.dev = { ...d }; savePrefs(); };
   q('#x_go').onclick = () => {
     save();
     if (location.protocol === 'https:') { q('#x_note').innerHTML = '<span class="warn">This page is served over HTTPS, so the browser won’t load the reader (http) inside it. Use Pop out, or open the saved library file from disk.</span>'; return; }
@@ -2192,6 +2197,22 @@ function sendDialog(list) {
     try { const jobs = await jobsOf(); if (!jobs) return; for (const j of jobs) { downloadBlob(await j.get(), j.name); await nap(400); } res.textContent = `${jobs.length} file(s) downloaded — pick them in the reader page’s Upload.`; }
     catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
   };
+  q('#x_wifi').onclick = async () => {
+    const chosen = books.filter(b => sel.has(b.id)); if (!chosen.length) return toast('Tick some books first');
+    save(); q('#x_wifi').disabled = true; q('#x_rep').textContent = '';
+    const ui = { msg: m => { res.textContent = m; }, bar() { } };
+    try {
+      const r = await sendBooks(chosen, { ...d, type: 'auto', host: d.host.replace(/^https?:\/\//, '').replace(/\/.*$/, '') }, ui);
+      res.innerHTML = (r.ok ? `<b style="color:var(--good)">Sent ${r.ok} file${r.ok === 1 ? '' : 's'}.</b> ` : '<b>Nothing sent.</b> ') +
+        (r.skip.length ? `<div class="warn">Skipped (no EPUB/XTC/TXT): ${esc(r.skip.slice(0, 4).join(', '))}</div>` : '') +
+        (r.fail.length ? `<div class="warn">${esc(r.fail.slice(0, 2).join(' · '))}<br>Press Diagnose Wi-Fi to see why.</div>` : '');
+    } catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+    q('#x_wifi').disabled = false;
+  };
+  if (location.protocol === 'https:') {
+    q('#x_fr').style.display = 'none'; q('#x_go').hidden = true;
+    q('#x_note').innerHTML = 'This page is on https, so the reader can’t be shown inside it (that is normal). Tick books and press <b>Send over Wi-Fi</b> — when Chrome asks to connect to devices on your local network, choose <b>Allow</b>. <b>Pop out</b> opens the reader’s own page if you prefer to upload by hand.';
+  }
   q('#x_sd').onclick = async () => {
     if (!window.showDirectoryPicker) return toast('This browser can’t write to a folder — use Prepare files instead');
     const chosen = books.filter(b => sel.has(b.id)); if (!chosen.length) return toast('Tick some books first');
@@ -2221,7 +2242,7 @@ function directSendDialog(list) {
   const d = Object.assign({ type: 'auto', host: 'crosspoint.local', port: 81, path: '/Books', fmt: 'auto', convert: true }, prefs.dev);
   const box = modal(`<h3>Send to eReader</h3>
     <p class="mute">${list.length ? `${list.length} book${list.length === 1 ? '' : 's'} selected.` : 'Set up your reader here, then select books and choose Send to eReader.'}</p>
-    ${location.protocol === 'https:' ? '<p class="warn">This page is served over HTTPS, so the browser will block connections to the reader. Open the saved file from disk (or over http://) instead.</p>' : ''}
+    ${location.protocol === 'content:' ? '<p class="warn">This page was opened from Android’s Downloads (content://), which Chrome blocks from reaching local devices. See Diagnose Wi-Fi.</p>' : ''}
     <label class="l">Method</label><select id="d_type"><option value="auto">Auto — fast WebSocket, falls back to web upload</option><option value="form">Web upload via browser form (most compatible)</option><option value="ws">Xteink / CrossPoint — WebSocket only</option><option value="http">Xteink / CrossPoint — HTTP upload</option></select>
     <div id="d_net"><div class="fgrid"><div><label class="l">Reader address</label><input id="d_host" value="${esc(d.host)}" spellcheck="false"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${['crosspoint.local', '192.168.4.1', '192.168.3.3'].map(h => `<button type="button" data-h="${h}" style="padding:3px 8px;font-size:12px;min-height:0">${h}</button>`).join('')}<button type="button" id="d_open" style="padding:3px 8px;font-size:12px;min-height:0">Open reader page ↗</button></div></div><div id="d_pw"><label class="l">WebSocket port</label><input id="d_port" type="number" value="${d.port}"></div></div></div>
     <label class="l">Folder on the reader — tokens like {author} or {series} work</label><input id="d_path" value="${esc(d.path)}" spellcheck="false">
