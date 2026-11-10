@@ -2063,7 +2063,7 @@ async function mkdirs(d, path, seen) {
     if (!seen.has(full)) {
       seen.add(full);
       try {
-        if (location.protocol === 'https:') await fetch(`http://${httpHost(d)}/mkdir`, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `name=${encodeURIComponent(seg)}&path=${encodeURIComponent(parent || '/')}` });
+        if (location.protocol === 'https:') await fetch(`http://${httpHost(d)}/mkdir`, { method: 'POST', mode: 'no-cors', targetAddressSpace: 'local', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `name=${encodeURIComponent(seg)}&path=${encodeURIComponent(parent || '/')}` });
         else await formSubmit(`http://${httpHost(d)}/mkdir`, { name: seg, path: parent || '/' }, null, 4000);
       } catch { }
     }
@@ -2102,13 +2102,13 @@ async function sendBooks(list, d, ui) {
   return { ok, skip, fail };
 }
 /* ---- Wi-Fi doctor: runs the same steps the reader's own page uses and reports exactly which one fails ---- */
-async function httpProbe(host) {
-  const c = new AbortController(), t0 = Date.now(), to = setTimeout(() => c.abort(), 6000);
-  try { await fetch(`http://${host}/`, { mode: 'no-cors', signal: c.signal, cache: 'no-store' }); return { ok: true, ms: Date.now() - t0 }; }
-  catch (e) { return { ok: false, ms: Date.now() - t0, err: e.name === 'AbortError' ? 'no answer within 6 s' : e.message }; }
+async function httpProbe(host, ms = 6000) {
+  const c = new AbortController(), t0 = Date.now(), to = setTimeout(() => c.abort(), ms);
+  try { await fetch(`http://${host}/`, { mode: 'no-cors', signal: c.signal, cache: 'no-store', targetAddressSpace: 'local' }); return { ok: true, ms: Date.now() - t0 }; }
+  catch (e) { return { ok: false, ms: Date.now() - t0, err: e.name === 'AbortError' ? `no answer within ${Math.round(ms / 1000)} s` : e.message }; }
   finally { clearTimeout(to); }
 }
-function wsProbe(host, port, ms = 9000) {
+function wsProbe(host, port, ms = 15000) {
   return new Promise(res => {
     const log = [], t0 = Date.now(), tick = m => log.push(`${Date.now() - t0} ms  ${m}`); let ws, done = false, to;
     const end = ok => { if (done) return; done = true; clearTimeout(to); try { ws.close(); } catch { } res({ ok, log }); };
@@ -2119,16 +2119,24 @@ function wsProbe(host, port, ms = 9000) {
     ws.onerror = () => tick('connection error'); ws.onclose = e => { tick(`closed (code ${e.code})`); end(false); };
   });
 }
+async function permState() {
+  const out = [];
+  for (const n of ['local-network-access', 'local-network', 'loopback-network']) { try { const r = await navigator.permissions.query({ name: n }); out.push(`${n}: ${r.state}`); } catch { } }
+  return out.join(', ') || 'not reported by this browser';
+}
 async function wifiDoctor(host, port) {
   const env = `${location.protocol}//${location.host || '(saved file)'} · secure context ${window.isSecureContext} · ${/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/.test(navigator.userAgent) ? 'iOS' : 'desktop'} · Chrome ${(navigator.userAgent.match(/Chrome\/(\d+)/) || [, '?'])[1]}`;
-  const h = await httpProbe(host), w = await wsProbe(host, port);
+  const perm = await permState();
+  const h = await httpProbe(host, 45000);   /* long wait: Chrome may be showing a permission prompt */
+  const w = h.ok ? await wsProbe(host, port) : { ok: false, log: ['(skipped — the reader’s web server was not reachable)'] };
+  const waited = !h.ok && /no answer/.test(h.err || '');
   let verdict;
-  if (!h.ok && !w.ok && location.protocol === 'content:') verdict = 'BLOCKED BY THE BROWSER: this page was opened from Android’s Downloads (content://), and Chrome refuses to let such pages reach devices on your Wi-Fi (the failure was instant). FIX — try in order: (A) in Chrome’s address bar type file:///storage/emulated/0/Download/library.html (change the folder if you saved it elsewhere) and open the library from there; (B) if A says access denied, put library.html on a free https host (Netlify Drop, GitHub Pages or Cloudflare Pages) and open that address — only this one file is hosted, your books stay on your phone — then press Diagnose again and choose Allow when Chrome asks for local network access.';
-  else if (h.ok && w.ok) verdict = 'WORKS: this page can reach the reader and upload to it. A file named xteink-test.txt is now in the reader’s root folder (delete it later). If sending still fails, copy this report to me.';
-  else if (h.ok) verdict = 'The reader’s web server answers, but the fast WebSocket upload channel does not. Likely stock firmware or a different port. Use “Web upload via browser form”, or set the correct port.';
-  else if (w.ok) verdict = 'WebSocket works (the reader’s page itself didn’t answer a plain request, but uploads should still work).';
-  else verdict = 'This page cannot reach the reader at all. The reader page opening in a normal tab means the reader is fine, so the browser or phone is blocking this page: (1) Android may be sending this page’s traffic over mobile data because the reader’s Wi-Fi has no internet — turn mobile data off; (2) Chrome’s Local network access permission may be denied for this page — Chrome › site settings; (3) a VPN or private DNS can break .local names — try the reader’s IP address instead of crosspoint.local.';
-  return { verdict, text: `${verdict}\n\nPage: ${env}\nTarget: ${host} (WebSocket port ${port})\n\n1. Reader web server (HTTP): ${h.ok ? `answered in ${h.ms} ms` : `FAILED — ${h.err} (${h.ms} ms)`}\n2. Upload channel (WebSocket + tiny test upload):\n   ${w.log.join('\n   ') || '(no events)'}` };
+  if (!h.ok && !w.ok && location.protocol === 'content:') verdict = 'BLOCKED BY THE BROWSER: this page was opened from Android’s Downloads (content://), and Chrome refuses to let such pages reach devices on your Wi-Fi. Open it from an https address instead (GitHub Pages works) and press Diagnose again.';
+  else if (h.ok && w.ok) verdict = 'WORKS: this page can reach the reader and upload to it. A file named xteink-test.txt is now in the reader’s root folder (delete it later). Now use Send over Wi-Fi.';
+  else if (h.ok) verdict = 'The reader’s web server answers, but the fast WebSocket upload channel does not. Likely stock firmware or a different port. Set the correct port, or upload by hand with Pop out / Prepare files.';
+  else if (waited) verdict = 'NO ANSWER even after waiting 45 s. Most likely causes: (1) Chrome’s “connect to devices on your local network” prompt was dismissed or denied — tap the lock/settings icon next to the page address › Permissions (or Site settings) › Local network access › Allow, then reload and try again; (2) this phone is not on the same Wi-Fi as the reader, or is using mobile data because that Wi-Fi has no internet — turn mobile data off; (3) the address is wrong — open http://' + host + ' in a normal tab to confirm it shows the reader.';
+  else verdict = 'This page cannot reach the reader (the browser refused instantly). Check Chrome’s Local network access permission for this page (lock icon › Permissions), a VPN / private DNS, or try the reader’s IP address.';
+  return { verdict, text: `${verdict}\n\nPage: ${env}\nPermission: ${perm}\nTarget: ${host} (WebSocket port ${port})\n\n1. Reader web server (HTTP): ${h.ok ? `answered in ${h.ms} ms` : `FAILED — ${h.err} (${h.ms} ms)`}\n2. Upload channel (WebSocket + tiny test upload):\n   ${w.log.join('\n   ') || '(no events)'}` };
 }
 /* ---- Send to eReader: pick books, stage them in one folder, and use the reader's own page without leaving the library ---- */
 function sendDialog(list) {
@@ -2228,7 +2236,7 @@ function sendDialog(list) {
     q('#x_sd').disabled = false;
   };
   q('#x_diag').onclick = async () => {
-    save(); q('#x_diag').disabled = true; res.textContent = 'Testing the connection to the reader… (keep its File Transfer screen open)'; q('#x_rep').textContent = '';
+    save(); q('#x_diag').disabled = true; res.innerHTML = '<b>Testing…</b> If Chrome asks to connect to devices on your local network, tap <b>Allow</b> (it waits up to 45 s). Keep the reader’s File Transfer screen open.'; q('#x_rep').textContent = '';
     const r = await wifiDoctor(d.host.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:\d+$/, ''), d.port || 81);
     res.innerHTML = `<b>${esc(r.verdict.split(':')[0] === 'WORKS' ? 'Wi-Fi works' : 'Result')}</b> <button type="button" id="x_copy" style="padding:2px 8px;font-size:12px;min-height:0">Copy report</button>`;
     q('#x_rep').textContent = r.text; q('#x_copy').onclick = () => { try { navigator.clipboard.writeText(r.text); toast('Report copied'); } catch { toast('Select the text to copy it'); } };
