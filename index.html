@@ -2005,7 +2005,7 @@ function dupDialog() {
 /* ---- send to eReader (Xteink / CrossPoint) ---- */
 const nap = ms => new Promise(r => setTimeout(r, ms));
 const READER_FMT = { auto: ['epub', 'xtch', 'xtc', 'txt'], xtc: ['xtch', 'xtc', 'epub', 'txt'] };
-const devHost = d => d.host.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+const devHost = d => d.host.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
 const httpHost = d => d.type !== 'http' ? devHost(d).replace(/:\d+$/, '') : devHost(d);
 function pickFiles(b, d) {
   if (d.fmt === 'all') return b.formats.filter(f => READER_FMT.auto.includes(f.ext));
@@ -2079,7 +2079,7 @@ async function jobsFor(b, d, ui) {
   return [{ name: `${sanitize(b.title)} - ${sanitize(b.authors[0])}.${out.ext}`, get: async () => out.blob }];
 }
 async function sendBooks(list, d, ui) {
-  d._http = false; const seen = new Set(); let ok = 0; const skip = [], fail = [];
+  d._http = false; const seen = new Set(); let ok = 0; const skip = [], fail = [], exists = [];
   for (let i = 0; i < list.length; i++) {
     const b = list[i]; ui.msg(`(${i + 1}/${list.length}) ${b.title}`);
     try {
@@ -2096,11 +2096,13 @@ async function sendBooks(list, d, ui) {
         }
         ok++;
       }
-    } catch (e) { fail.push(`${b.title}: ${e.message}`); if (/connect|Timed out/i.test(e.message)) break; }
+    } catch (e) { if (/already exists/i.test(e.message)) { exists.push(b.title); continue; } fail.push(`${b.title}: ${e.message}`); if (/connect|Timed out/i.test(e.message)) break; }
     ui.bar((i + 1) / list.length * 100);
   }
-  return { ok, skip, fail };
+  return { ok, skip, fail, exists };
 }
+/* reader address as typed or pasted (Http://…, trailing paths, spaces) → bare host */
+const normHost = v => String(v || '').trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/[\/?#].*$/, '').trim() || 'crosspoint.local';
 /* ---- Wi-Fi doctor: runs the same steps the reader's own page uses and reports exactly which one fails ---- */
 async function httpProbe(host, ms = 6000) {
   const c = new AbortController(), t0 = Date.now(), to = setTimeout(() => c.abort(), ms);
@@ -2115,7 +2117,7 @@ function wsProbe(host, port, ms = 15000) {
     to = setTimeout(() => { tick('no answer (timeout)'); end(false); }, ms);
     try { ws = new WebSocket(`ws://${host}:${port}/`); } catch (e) { tick('could not start: ' + e.message); return end(false); }
     ws.onopen = () => { tick('connected → sending START'); ws.send('START:xteink-test.txt:11:/'); };
-    ws.onmessage = e => { const m = typeof e.data === 'string' ? e.data : '[binary]'; tick('reader says: ' + m.slice(0, 80)); if (m === 'READY') ws.send(new TextEncoder().encode('xteink-test')); else if (m === 'DONE') end(true); else if (m.startsWith('ERROR')) end(false); };
+    ws.onmessage = e => { const m = typeof e.data === 'string' ? e.data : '[binary]'; tick('reader says: ' + m.slice(0, 80)); if (m === 'READY') ws.send(new TextEncoder().encode('xteink-test')); else if (m === 'DONE' || /already exists/i.test(m)) end(true); else if (m.startsWith('ERROR')) end(false); };
     ws.onerror = () => tick('connection error'); ws.onclose = e => { tick(`closed (code ${e.code})`); end(false); };
   });
 }
@@ -2171,8 +2173,8 @@ function sendDialog(list) {
   };
   q('#x_q').oninput = draw; draw();
   q('#x_list').onchange = e => { const c = e.target.closest('[data-id]'); if (!c) return; c.checked ? sel.add(c.dataset.id) : sel.delete(c.dataset.id); q('#x_cnt').textContent = `${sel.size} selected`; };
-  const url = () => 'http://' + (q('#x_host').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '') || 'crosspoint.local') + '/';
-  const save = () => { Object.assign(d, { path: q('#x_path').value.trim() || '/', host: q('#x_host').value.trim() || 'crosspoint.local', fmt: q('#x_fmt').value, convert: q('#x_cv').checked }); prefs.dev = { ...d }; savePrefs(); };
+  const url = () => 'http://' + (q('#x_host').value.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '') || 'crosspoint.local') + '/';
+  const save = () => { Object.assign(d, { path: q('#x_path').value.trim() || '/', host: normHost(q('#x_host').value), fmt: q('#x_fmt').value, convert: q('#x_cv').checked }); q('#x_host').value = d.host; prefs.dev = { ...d }; savePrefs(); };
   q('#x_go').onclick = () => {
     save();
     if (location.protocol === 'https:') { q('#x_note').innerHTML = '<span class="warn">This page is served over HTTPS, so the browser won’t load the reader (http) inside it. Use Pop out, or open the saved library file from disk.</span>'; return; }
@@ -2210,8 +2212,9 @@ function sendDialog(list) {
     save(); q('#x_wifi').disabled = true; q('#x_rep').textContent = '';
     const ui = { msg: m => { res.textContent = m; }, bar() { } };
     try {
-      const r = await sendBooks(chosen, { ...d, type: 'auto', host: d.host.replace(/^https?:\/\//, '').replace(/\/.*$/, '') }, ui);
+      const r = await sendBooks(chosen, { ...d, type: 'auto', host: d.host.replace(/^https?:\/\//i, '').replace(/\/.*$/, '') }, ui);
       res.innerHTML = (r.ok ? `<b style="color:var(--good)">Sent ${r.ok} file${r.ok === 1 ? '' : 's'}.</b> ` : '<b>Nothing sent.</b> ') +
+        (r.exists.length ? `<div>Already on the reader (left as is): ${esc(r.exists.slice(0, 4).join(', '))}${r.exists.length > 4 ? '…' : ''}</div>` : '') +
         (r.skip.length ? `<div class="warn">Skipped (no EPUB/XTC/TXT): ${esc(r.skip.slice(0, 4).join(', '))}</div>` : '') +
         (r.fail.length ? `<div class="warn">${esc(r.fail.slice(0, 2).join(' · '))}<br>Press Diagnose Wi-Fi to see why.</div>` : '');
     } catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
@@ -2237,7 +2240,7 @@ function sendDialog(list) {
   };
   q('#x_diag').onclick = async () => {
     save(); q('#x_diag').disabled = true; res.innerHTML = '<b>Testing…</b> If Chrome asks to connect to devices on your local network, tap <b>Allow</b> (it waits up to 45 s). Keep the reader’s File Transfer screen open.'; q('#x_rep').textContent = '';
-    const r = await wifiDoctor(d.host.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:\d+$/, ''), d.port || 81);
+    const r = await wifiDoctor(d.host.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/:\d+$/, ''), d.port || 81);
     res.innerHTML = `<b>${esc(r.verdict.split(':')[0] === 'WORKS' ? 'Wi-Fi works' : 'Result')}</b> <button type="button" id="x_copy" style="padding:2px 8px;font-size:12px;min-height:0">Copy report</button>`;
     q('#x_rep').textContent = r.text; q('#x_copy').onclick = () => { try { navigator.clipboard.writeText(r.text); toast('Report copied'); } catch { toast('Select the text to copy it'); } };
     q('#x_diag').disabled = false;
@@ -2260,7 +2263,7 @@ function directSendDialog(list) {
     <div class="btns"><button class="primary" id="d_go"${list.length ? '' : ' disabled'}>Send</button><button id="d_test">Test connection</button><button id="d_share">Share…</button><button id="d_no">Close</button></div>`);
   const q = s => box.querySelector(s), res = q('#d_res');
   q('#d_type').value = d.type; q('#d_fmt').value = d.fmt;
-  const read = () => { Object.assign(d, { type: q('#d_type').value, host: q('#d_host').value.trim() || 'crosspoint.local', port: +q('#d_port').value || 81, path: q('#d_path').value.trim() || '/', fmt: q('#d_fmt').value, convert: q('#d_cv').checked }); prefs.dev = { ...d }; savePrefs(); return d; };
+  const read = () => { Object.assign(d, { type: q('#d_type').value, host: normHost(q('#d_host').value), port: +q('#d_port').value || 81, path: q('#d_path').value.trim() || '/', fmt: q('#d_fmt').value, convert: q('#d_cv').checked }); prefs.dev = { ...d }; savePrefs(); return d; };
   const sync = () => {
     const t = q('#d_type').value; q('#d_pw').hidden = t === 'http' || t === 'form';
     q('#d_help').textContent = 'On the reader, open File Transfer and leave that screen open, then join the same Wi-Fi (or the reader’s hotspot). Type the IP shown on the reader’s screen — “.local” names often don’t resolve on Android and Windows. Stock firmware has no fast WebSocket; Auto handles that.';
