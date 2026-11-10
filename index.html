@@ -295,6 +295,7 @@ tr.row.sel{background:var(--acc-soft)}
         <button data-act="rename">Rename / merge authors, series, tags…</button>
         <button data-act="dups">Find duplicates…</button>
         <button data-act="device">Send to eReader…</button>
+        <button data-act="reader">Reader files (browse / delete)…</button>
         <hr>
         <button data-act="backupZip">Backup to ZIP file…</button>
         <button data-act="backupFolder">Backup to another folder…</button>
@@ -2131,6 +2132,7 @@ async function wifiDoctor(host, port) {
   const perm = await permState();
   const h = await httpProbe(host, 45000);   /* long wait: Chrome may be showing a permission prompt */
   const w = h.ok ? await wsProbe(host, port) : { ok: false, log: ['(skipped — the reader’s web server was not reachable)'] };
+  const f = h.ok ? await filesProbe(host) : null;
   const waited = !h.ok && /no answer/.test(h.err || '');
   let verdict;
   if (!h.ok && !w.ok && location.protocol === 'content:') verdict = 'BLOCKED BY THE BROWSER: this page was opened from Android’s Downloads (content://), and Chrome refuses to let such pages reach devices on your Wi-Fi. Open it from an https address instead (GitHub Pages works) and press Diagnose again.';
@@ -2138,7 +2140,49 @@ async function wifiDoctor(host, port) {
   else if (h.ok) verdict = 'The reader’s web server answers, but the fast WebSocket upload channel does not. Likely stock firmware or a different port. Set the correct port, or upload by hand with Pop out / Prepare files.';
   else if (waited) verdict = 'NO ANSWER even after waiting 45 s. Most likely causes: (1) Chrome’s “connect to devices on your local network” prompt was dismissed or denied — tap the lock/settings icon next to the page address › Permissions (or Site settings) › Local network access › Allow, then reload and try again; (2) this phone is not on the same Wi-Fi as the reader, or is using mobile data because that Wi-Fi has no internet — turn mobile data off; (3) the address is wrong — open http://' + host + ' in a normal tab to confirm it shows the reader.';
   else verdict = 'This page cannot reach the reader (the browser refused instantly). Check Chrome’s Local network access permission for this page (lock icon › Permissions), a VPN / private DNS, or try the reader’s IP address.';
-  return { verdict, text: `${verdict}\n\nPage: ${env}\nPermission: ${perm}\nTarget: ${host} (WebSocket port ${port})\n\n1. Reader web server (HTTP): ${h.ok ? `answered in ${h.ms} ms` : `FAILED — ${h.err} (${h.ms} ms)`}\n2. Upload channel (WebSocket + tiny test upload):\n   ${w.log.join('\n   ') || '(no events)'}` };
+  return { verdict, text: `${verdict}\n\nPage: ${env}\nPermission: ${perm}\nTarget: ${host} (WebSocket port ${port})\n\n1. Reader web server (HTTP): ${h.ok ? `answered in ${h.ms} ms` : `FAILED — ${h.err} (${h.ms} ms)`}\n2. Upload channel (WebSocket + tiny test upload):\n   ${w.log.join('\n   ') || '(no events)'}\n\n3. Reader file list (needed for Reader files): ${f ? (f.ok ? `readable (${f.n} items in the top folder)` : `not readable from this page — ${f.err}`) : '(skipped)'}` };
+}
+async function filesProbe(host) {
+  try { const r = await fetch(`http://${host}/api/files?path=/`, { cache: 'no-store', targetAddressSpace: 'local' }); const j = await r.json(); return { ok: Array.isArray(j), n: Array.isArray(j) ? j.length : 0 }; }
+  catch (e) { return { ok: false, err: e.message }; }
+}
+/* ---- Reader files: browse, create folders and delete on the reader (CrossPoint web API) ---- */
+function readerFilesDialog(host0) {
+  const d = prefs.dev || {}; let host = normHost(host0 || d.host), cwd = '/', items = [];
+  const hs = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : n + ' B', join = (p, n) => (p === '/' ? '' : p) + '/' + n;
+  const box = modal(`<h3>Reader files</h3>
+    <div class="xrow"><input id="r_host" value="${esc(host)}" spellcheck="false"><button id="r_go" class="primary">Connect</button></div>
+    <div id="r_path" class="mute" style="margin:8px 0;word-break:break-all"></div><div class="xlist" id="r_list" style="max-height:48vh"></div><div id="r_msg" style="min-height:1.4em;margin-top:6px"></div>
+    <div class="btns"><button id="r_up">↑ Up</button><button id="r_mk">＋ New folder</button><button id="r_rf">Refresh</button><button id="r_no">Close</button></div>`);
+  const q = s => box.querySelector(s), msg = t => { q('#r_msg').textContent = t; };
+  const post = async (url, fields) => { await fetch(`http://${host}${url}`, { method: 'POST', mode: 'no-cors', targetAddressSpace: 'local', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(fields).toString() }); await nap(200); };
+  const list = async p => { const r = await fetch(`http://${host}/api/files?path=${encodeURIComponent(p)}`, { cache: 'no-store', targetAddressSpace: 'local' }); if (!r.ok) throw new Error('reader answered ' + r.status); const j = await r.json(); if (!Array.isArray(j)) throw new Error('unexpected reply'); return j; };
+  const rmTree = async p => { for (const c of await list(p)) { if (c.isDirectory) await rmTree(join(p, c.name)); else await post('/delete', { path: join(p, c.name), type: 'file' }); } await post('/delete', { path: p, type: 'folder' }); };
+  const draw = () => {
+    q('#r_list').innerHTML = items.map((it, i) => `<div data-i="${i}" style="display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line,#8883)"><span data-open style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:${it.isDirectory ? 'pointer' : 'default'}">${it.isDirectory ? '▸ ' : ''}${esc(it.name)}</span><small class="mute">${it.isDirectory ? '' : hs(it.size || 0)}</small><button data-del style="padding:2px 8px;min-height:0">Delete</button></div>`).join('');
+  };
+  const load = async () => {
+    q('#r_path').textContent = cwd; msg('Loading…');
+    try { items = (await list(cwd)).sort((a, b) => (b.isDirectory - a.isDirectory) || natCmp(a.name, b.name)); draw(); msg(items.length ? '' : 'This folder is empty.'); }
+    catch (e) {
+      items = []; draw();
+      q('#r_msg').innerHTML = `<span class="warn">Couldn’t read the reader’s file list from this page (${esc(e.message)}). The reader’s firmware probably doesn’t let other pages read it (a browser security rule). Sending books still works.</span> <button type="button" id="r_pop" style="padding:2px 8px;font-size:12px;min-height:0">Open the reader’s own file page ↗</button>`;
+      q('#r_pop').onclick = () => window.open(`http://${host}/files`, 'reader', 'popup,width=520,height=780');
+    }
+  };
+  q('#r_go').onclick = () => { host = normHost(q('#r_host').value); q('#r_host').value = host; prefs.dev = { ...(prefs.dev || {}), host }; savePrefs(); cwd = '/'; load(); };
+  q('#r_rf').onclick = load; q('#r_no').onclick = closeModal;
+  q('#r_up').onclick = () => { cwd = cwd.replace(/\/[^/]*$/, '') || '/'; load(); };
+  q('#r_mk').onclick = async () => { const n = (prompt('New folder name:') || '').trim().replace(/[\\/]/g, ''); if (!n) return; msg('Creating…'); try { await post('/mkdir', { name: n, path: cwd }); } catch (e) { msg(e.message); return; } load(); };
+  q('#r_list').onclick = async e => {
+    const row = e.target.closest('[data-i]'); if (!row) return; const it = items[+row.dataset.i], path = join(cwd, it.name);
+    if (e.target.closest('[data-del]')) {
+      if (!confirm(it.isDirectory ? `Delete the folder “${it.name}” and everything inside it from the reader?` : `Delete “${it.name}” from the reader?`)) return;
+      msg('Deleting…'); try { if (it.isDirectory) await rmTree(path); else await post('/delete', { path, type: 'file' }); } catch (x) { msg(x.message); }
+      load();
+    } else if (it.isDirectory && e.target.closest('[data-open]')) { cwd = path; load(); }
+  };
+  load();
 }
 /* ---- Send to eReader: pick books, stage them in one folder, and use the reader's own page without leaving the library ---- */
 function sendDialog(list) {
@@ -2162,7 +2206,7 @@ function sendDialog(list) {
       <iframe class="xfr" id="x_fr" title="Reader page"></iframe>
       <p class="mute" style="font-size:12px" id="x_note">On the reader, open File Transfer first. In the page above choose Upload, then in the file picker open <b>${esc(root ? root.name : 'your library')} › ${STAGE}</b> and select all files. If the pane stays blank, your browser or the reader won’t show it inside another page — use Pop out.</p>
     </div></div>
-    <div class="btns"><button id="x_diag" class="primary">Diagnose Wi-Fi</button><button id="x_direct">Direct send (experimental)…</button><button id="x_no">Close</button></div>`, '', () => { box.style.width = box.style.maxWidth = ''; });
+    <div class="btns"><button id="x_diag" class="primary">Diagnose Wi-Fi</button><button id="x_files">Reader files…</button><button id="x_direct">Direct send (experimental)…</button><button id="x_no">Close</button></div>`, '', () => { box.style.width = box.style.maxWidth = ''; });
   box.style.width = box.style.maxWidth = 'min(1100px,96vw)';
   const q = s => box.querySelector(s), res = q('#x_res'); q('#x_fmt').value = d.fmt;
   const draw = () => {
@@ -2245,6 +2289,7 @@ function sendDialog(list) {
     q('#x_rep').textContent = r.text; q('#x_copy').onclick = () => { try { navigator.clipboard.writeText(r.text); toast('Report copied'); } catch { toast('Select the text to copy it'); } };
     q('#x_diag').disabled = false;
   };
+  q('#x_files').onclick = () => { save(); closeModal(); readerFilesDialog(d.host); };
   q('#x_direct').onclick = () => { save(); const l = books.filter(b => sel.has(b.id)); closeModal(); directSendDialog(l); };
   q('#x_no').onclick = closeModal;
   if (location.protocol !== 'https:' && list.length) q('#x_fr').src = url();
@@ -2359,6 +2404,7 @@ $('#pop').onclick = async e => {
     if (a === 'rename') renameDialog();
     if (a === 'dups') dupDialog();
     if (a === 'device') sendDialog([]);
+    if (a === 'reader') readerFilesDialog();
     if (a === 'backupZip') await backupZip();
     if (a === 'backupFolder') await backupFolder();
     if (a === 'restoreZip') $('#zipIn').click();
