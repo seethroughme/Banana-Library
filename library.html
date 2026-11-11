@@ -1,0 +1,2612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bookshelf – offline library manager</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22lgA%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f4ac5e%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b4501a%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2215%22%20fill%3D%22url%28%23lgA%29%22/%3E%3Crect%20x%3D%228%22%20y%3D%2247%22%20width%3D%2248%22%20height%3D%224%22%20rx%3D%222%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.95%22/%3E%3Crect%20x%3D%2213%22%20y%3D%2215%22%20width%3D%2210%22%20height%3D%2232%22%20rx%3D%222.2%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%2213%22%20y%3D%2229%22%20width%3D%2210%22%20height%3D%222.5%22%20fill%3D%22%23c4611f%22%20fill-opacity%3D%22.35%22/%3E%3Crect%20x%3D%2225%22%20y%3D%2210%22%20width%3D%2210%22%20height%3D%2237%22%20rx%3D%222.2%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.86%22/%3E%3Crect%20x%3D%2225%22%20y%3D%2217%22%20width%3D%2210%22%20height%3D%222.5%22%20fill%3D%22%23c4611f%22%20fill-opacity%3D%22.35%22/%3E%3Cg%20transform%3D%22rotate%2813%2047%2047%29%22%3E%3Crect%20x%3D%2237%22%20y%3D%2217%22%20width%3D%2210%22%20height%3D%2230%22%20rx%3D%222.2%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.68%22/%3E%3C/g%3E%3Cpath%20d%3D%22M16.5%2015v10l2.5-2.2%202.5%202.2V15z%22%20fill%3D%22%23a8461a%22/%3E%3C/svg%3E">
+<meta name="theme-color" content="#c0601c">
+<style>
+:root{color-scheme:light dark;
+--bg:#f3f0ea;--panel:#fffdf9;--panel2:#f8f5ee;--ink:#25211b;--mute:#7b7467;--line:#e7e1d5;
+--acc:#c0601c;--acc2:#a34d12;--acc-ink:#fff;--acc-soft:#fbe8d4;
+--good:#2f8f5b;--warn:#b7791f;--bad:#c0392b;
+--shadow:0 1px 2px rgba(40,30,15,.08),0 2px 8px rgba(40,30,15,.06);--shadow-lg:0 12px 40px rgba(30,20,5,.28);
+--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif}
+@media(prefers-color-scheme:dark){:root{--bg:#131210;--panel:#1b1916;--panel2:#22201c;--ink:#efe9dd;--mute:#9b9384;--line:#34312b;--acc:#e8893a;--acc2:#f19a52;--acc-ink:#1c1105;--acc-soft:#3a2a18;--good:#58c58c;--warn:#e0a84a;--bad:#ef6a5b;--shadow:0 1px 2px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35);--shadow-lg:0 12px 40px rgba(0,0,0,.65)}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+small{color:var(--mute)}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.logo{display:block;width:34px;height:34px}
+button{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;transition:background .15s,border-color .15s,transform .05s;white-space:nowrap}
+button:hover{border-color:var(--acc);background:var(--panel2)}
+button:active{transform:translateY(1px)}
+button.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:600}
+button.primary:hover{background:var(--acc2);border-color:var(--acc2)}
+button.danger{color:var(--bad)}
+button.ghost{background:none;border-color:transparent}
+button.ghost:hover{background:var(--panel2);border-color:var(--line)}
+button.ib{padding:7px 9px}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
+.mute{color:var(--mute)}
+.warn{color:var(--bad);font-size:12px}
+.sp{flex:1}
+
+/* ---- header ---- */
+header.top{display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap;position:relative;z-index:10}
+.brand{display:flex;align-items:center;gap:10px;margin-right:6px}
+.brand .logo{filter:drop-shadow(0 2px 4px rgba(150,70,10,.3))}
+.brand b{display:block;font:700 20px/1 var(--serif);letter-spacing:.2px}
+.brand small{display:block;font-size:11px;margin-top:3px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search{position:relative;flex:1;min-width:170px;max-width:420px}
+.search .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mute);pointer-events:none}
+.search input{padding-left:36px;border-radius:20px;background:var(--panel2)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.tools select{width:auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:7px 10px;background:var(--panel)}
+.seg button.on{background:var(--acc-soft);color:var(--acc2)}
+.menu{position:relative}
+.menu .pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);min-width:270px;z-index:20;padding:6px}
+.menu .pop button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:7px;white-space:normal}
+.menu .pop button:hover{background:var(--acc-soft)}
+.menu .pop hr{border:0;border-top:1px solid var(--line);margin:5px 2px}
+
+#selbar{display:flex;align-items:center;gap:10px;padding:7px 16px;background:var(--acc-soft);border-bottom:1px solid var(--line);flex-wrap:wrap}
+
+/* ---- layout ---- */
+#layout{flex:1;display:flex;min-height:0}
+#side{width:240px;overflow:auto;border-right:1px solid var(--line);background:var(--panel);padding:12px 10px;flex-shrink:0}
+#side .all{width:100%;justify-content:flex-start;margin-bottom:8px}
+#side details{margin:2px 0 8px}
+#side summary{cursor:pointer;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);padding:6px 4px;list-style:none;user-select:none}
+#side summary::-webkit-details-marker{display:none}
+#side summary::before{content:"›";display:inline-block;width:12px;transition:transform .15s}
+#side details[open]>summary::before{transform:rotate(90deg)}
+#side .it{display:flex;justify-content:space-between;gap:8px;padding:5px 10px;border-radius:7px;cursor:pointer}
+#side .it:hover{background:var(--panel2)}
+#side .it.on{background:var(--acc);color:var(--acc-ink)}
+#side .it span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#side .it span:last-child{color:var(--mute);font-size:12px}
+#side .it.on span:last-child{color:inherit;opacity:.85}
+#main{flex:1;overflow:auto;padding:16px 20px;position:relative}
+#count{color:var(--mute);margin-bottom:10px;font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--acc-soft);color:var(--acc2);border:1px solid var(--acc);border-radius:20px;padding:2px 11px;cursor:pointer;font-size:12px;font-weight:500}
+.chip:hover{background:var(--acc);color:var(--acc-ink)}
+.grp{margin:26px 0 12px;font:700 17px/1.2 var(--serif);border-bottom:1px solid var(--line);padding-bottom:6px}
+.grp:first-of-type{margin-top:4px}
+.grp span{color:var(--mute);font:400 12px system-ui,sans-serif;margin-left:8px}
+
+/* ---- cards ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:20px 14px}
+.card{cursor:pointer;border-radius:12px;padding:8px;user-select:none;transition:background .15s,transform .15s,box-shadow .15s}
+.card:hover{background:var(--panel);transform:translateY(-2px);box-shadow:var(--shadow)}
+.card.sel{background:var(--acc-soft);box-shadow:0 0 0 2px var(--acc)}
+.cv{aspect-ratio:2/3;border-radius:4px 8px 8px 4px;background:var(--line);overflow:hidden;box-shadow:0 2px 7px rgba(0,0,0,.28);position:relative}
+.cv img{width:100%;height:100%;object-fit:cover;display:block}
+.cv::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,0) 5%,rgba(0,0,0,0) 94%,rgba(0,0,0,.1))}
+.nc{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px 10px 30px;color:#fff;text-align:center;background:linear-gradient(155deg,hsl(var(--h) 42% 44%),hsl(calc(var(--h) + 30) 45% 26%));box-shadow:inset 0 0 0 5px rgba(255,255,255,.08)}
+.nc .pt{font:700 14px/1.2 var(--serif);word-break:break-word;margin:auto 0;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.nc .pa{font-size:11px;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:var(--acc);color:var(--acc-ink);display:none;align-items:center;justify-content:center;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.ck .i{width:14px;height:14px;stroke-width:3}
+.card.sel .ck{display:flex}
+.fb,.sb{position:absolute;background:rgba(0,0,0,.66);color:#fff;font-size:10px;font-weight:600;letter-spacing:.04em;padding:1px 6px;border-radius:4px;z-index:2}
+.fb{left:6px;bottom:6px}
+.sb{right:6px;top:6px}
+.card .t{margin-top:8px;font-weight:600;font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .a{color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---- list ---- */
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+th{color:var(--mute);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:var(--panel2)}
+tbody tr:last-child td{border-bottom:0}
+tr.row{cursor:pointer;user-select:none}
+tr.row:hover{background:var(--panel2)}
+tr.row.sel{background:var(--acc-soft)}
+
+/* ---- detail ---- */
+#detail{width:360px;border-left:1px solid var(--line);background:var(--panel);overflow:auto;flex-shrink:0;display:flex;flex-direction:column}
+#detail .dbody{padding:16px;flex:1}
+#detail .savebar{position:sticky;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:8px}
+#detail h3{margin:0 0 6px;font:700 18px/1.2 var(--serif)}
+#detail h4{margin:20px 0 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);border-top:1px solid var(--line);padding-top:12px}
+#detail label:not(.opt),#modalBox label.l{display:block;color:var(--mute);font-size:12px;font-weight:500;margin:12px 0 4px}
+#detail .dtop{display:flex;gap:14px}
+#detail .dcov{width:104px;flex-shrink:0}
+#detail .dhead{flex:1;min-width:0}
+#detail .row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#detail .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#detail .btns,#modalBox .btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.fmt{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.fmt b{min-width:44px}
+.fmt .sz{color:var(--mute);flex:1}
+.fmt select{width:auto;padding:4px 6px}
+.fmt button{padding:3px 8px}
+.empty{color:var(--mute);text-align:center;margin:10vh auto 0;max-width:420px}
+.empty .logo{width:84px;height:84px;margin:0 auto 14px;opacity:.9}
+.empty h2{font:700 22px var(--serif);color:var(--ink);margin:0 0 6px}
+.empty.small{margin-top:6vh}
+
+/* ---- welcome ---- */
+#welcome{position:fixed;inset:0;background:radial-gradient(1200px 600px at 20% -10%,var(--acc-soft),transparent 60%),var(--bg);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px}
+#welcome .box{max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px;box-shadow:var(--shadow-lg)}
+#welcome .logo{width:72px;height:72px;margin-bottom:14px;filter:drop-shadow(0 4px 10px rgba(150,70,10,.35))}
+#welcome h2{margin:0 0 8px;font:700 30px/1.1 var(--serif)}
+#welcome p{color:var(--mute)}
+#welcome .stack{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+#welcome .stack button{padding:12px}
+
+/* ---- dialogs ---- */
+#busy,#modal{position:fixed;inset:0;background:rgba(15,10,3,.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal{z-index:45}
+#busy .box,#modalBox{background:var(--panel);border-radius:16px;box-shadow:var(--shadow-lg);width:min(540px,100%);max-height:92vh;overflow:auto;padding:22px 24px}
+#busy .box{padding:20px 24px;width:min(420px,92vw)}
+#modalBox.wide{width:min(920px,100%)}
+#modalBox.flex{display:flex;flex-direction:column;padding:0;overflow:hidden}
+#modalBox h3{margin:0 0 8px;font:700 20px/1.2 var(--serif)}
+#modalBox .opt{display:block;padding:5px 0}
+#modalBox .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.mh{padding:20px 24px 8px}.mh h3{margin:0}
+.mb{padding:0 24px;overflow:auto;flex:1}
+.mf{padding:12px 24px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#bar{height:6px;background:var(--acc);border-radius:3px;width:0;transition:width .2s}
+#barwrap{background:var(--line);border-radius:3px;margin-top:10px}
+.pbar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:14px 0}
+.pbar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;z-index:60;max-width:90vw;box-shadow:var(--shadow-lg)}
+#drop{position:fixed;inset:12px;border:3px dashed var(--acc);border-radius:20px;background:rgba(192,96,28,.12);z-index:40;display:flex;align-items:center;justify-content:center;font:700 24px var(--serif);pointer-events:none}
+
+/* ---- review dialog ---- */
+.rv{display:grid;grid-template-columns:26px 116px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);align-items:start}
+.rv.off{opacity:.65;grid-template-columns:26px 1fr}
+.rvcov{display:flex;align-items:center;gap:6px}
+.th{width:50px;height:75px;object-fit:cover;border-radius:3px;background:var(--line);box-shadow:0 1px 3px rgba(0,0,0,.3);display:block}
+.arr{color:var(--mute)}
+.match{margin:4px 0;font-size:13px}
+.chg{margin:6px 0 0;padding:0;list-style:none;font-size:12.5px}
+.chg li{margin:3px 0;overflow-wrap:anywhere}
+.chg .old{color:var(--mute);text-decoration:line-through}
+.chg .new{color:var(--good)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:4px}
+.pill.high{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.pill.medium{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.low{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+
+#side .it b{cursor:pointer;font-weight:400;padding:0 4px}#side .it b:hover{color:var(--bad)}
+#selbar button{padding:5px 10px}
+@media(max-width:820px){#side{display:none}#detail{position:fixed;right:0;top:0;bottom:0;width:min(100%,380px);z-index:25;box-shadow:var(--shadow-lg)}.brand small{display:none}}
+@media(max-width:700px){header .lbl{display:none}#modalBox .fgrid{grid-template-columns:1fr}.rv{grid-template-columns:24px 1fr}.rvcov{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- phone / touch ---- */
+.mobonly{display:none}#scrim{display:none}
+@media(hover:none){.card:hover{transform:none;box-shadow:none;background:none}.card.sel:hover{background:var(--acc-soft)}.card{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}}
+@media(max-width:820px){
+  .mobonly{display:inline-flex}
+  #side{display:block;position:fixed;left:0;top:0;bottom:0;width:min(86vw,320px);z-index:35;transform:translateX(-102%);transition:transform .2s;box-shadow:var(--shadow-lg);padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+  body.sideopen #side{transform:none}
+  body.sideopen #scrim{display:block;position:fixed;inset:0;background:rgba(15,10,3,.45);z-index:34}
+  #side .it{padding:10px 12px}#side summary{padding:10px 6px}
+}
+@media(max-width:700px){
+  body{font-size:15px}
+  header.top{padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top));gap:8px}
+  .brand{margin-right:0;flex:1;min-width:0}.brand .logo{width:30px;height:30px}.brand b{font-size:18px}.brand small{display:none}
+  .tools{display:contents}
+  #addBtn,.menu{order:2}.search{order:3;flex:1 1 100%;max-width:none;min-width:0}
+  #group,#sort,#descBtn,.seg{order:4}#group,#sort{flex:1 1 0;min-width:0;width:auto}
+  #fetchBtn{display:none}
+  button,.seg button{min-height:40px}button.ib{min-width:40px}
+  input,select,textarea{font-size:16px;padding:9px 10px}
+  .menu .pop{position:fixed;left:8px;right:8px;top:auto;bottom:calc(8px + env(safe-area-inset-bottom));max-height:72vh;overflow:auto;z-index:60}
+  .menu .pop button{padding:14px 12px}
+  #main{padding:12px 12px 24px}body.selmode #main{padding-bottom:96px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:14px 10px}.card{padding:4px}
+  .card .t{font-size:12.5px}
+  table{table-layout:auto}th:nth-child(n+3),td:nth-child(n+3),colgroup col:nth-child(n+3){display:none}
+  colgroup col:nth-child(1){width:62%}colgroup col:nth-child(2){width:38%}th,td{padding:12px 10px}
+  #detail{position:fixed;inset:0;width:100%;z-index:36;border-left:0;box-shadow:none}
+  #detail .dbody{padding:14px 14px 8px;padding-top:calc(14px + env(safe-area-inset-top))}
+  #detail .savebar{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  body.selmode #detail{display:none}
+  #selbar{position:fixed;left:0;right:0;bottom:0;z-index:30;flex-wrap:nowrap;overflow-x:auto;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(0,0,0,.18)}
+  #selbar>*{flex:none}body:not(.selmode) #selbar{display:none}
+  #modal{align-items:flex-end;padding:0}
+  #modalBox,#modalBox.wide{width:100%;max-height:92vh;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  #modalBox.flex{max-height:94vh}.mh{padding:16px 16px 6px}.mb{padding:0 16px}.mf{padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  #busy .box{width:min(420px,92vw)}
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom));font-size:14px}
+  #welcome .box{padding:22px 18px}#welcome h2{font-size:26px}
+  .grp{font-size:16px}
+}
+.xf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px}.xlist{max-height:44vh;overflow:auto;border:1px solid var(--line,#8886);border-radius:8px;margin:6px 0}
+.xlist label{display:flex;gap:8px;padding:7px 9px;align-items:center;border-bottom:1px solid var(--line,#8883);cursor:pointer}.xfr{width:100%;height:52vh;border:1px solid var(--line,#8886);border-radius:8px;background:#fff}
+.xrow{display:flex;gap:6px}.xrow input{flex:1;min-width:0}@media(max-width:700px){.xf{grid-template-columns:1fr}.xfr{height:55vh}}
+
+/* ---- compact desktop layout ---- */
+@media(min-width:821px){
+  body{font-size:13.5px}button{padding:5px 10px;border-radius:7px;gap:6px}button.ib{padding:5px 7px}
+  input,select,textarea{padding:5px 9px;border-radius:7px}.i{width:16px;height:16px}
+  header.top{padding:6px 12px;gap:8px}.brand{gap:8px}.brand .logo{width:26px;height:26px}.brand b{font-size:17px}.brand small{display:none}
+  .search input{padding:5px 10px 5px 32px}.search .i{left:10px}.tools{gap:6px}.seg button{padding:5px 8px}
+  #selbar{padding:4px 12px;gap:8px}
+  #side{width:210px;padding:8px}#side .it{padding:3px 8px}#side summary{padding:4px}#side details{margin:0 0 4px}
+  #main{padding:12px 16px}.grid{grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:14px 10px}
+  .card{padding:6px;border-radius:10px}.card .t{font-size:12.5px;margin-top:6px}.card .a{font-size:11.5px}
+  .grp{margin:18px 0 8px;font-size:15px}th,td{padding:5px 10px}th{font-size:10.5px}
+  #detail{width:330px}#detail .dbody{padding:12px}.menu .pop button{padding:6px 9px}
+}
+#ctx{position:fixed;z-index:80;min-width:210px;max-width:min(300px,92vw);max-height:94vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:4px}
+#ctx button{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 9px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+#ctx button:hover{background:var(--acc-soft)}#ctx button.danger{color:var(--bad)}
+#ctx hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+#ctx .cs{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute);padding:4px 9px 1px}
+#ctx .cr{display:flex;gap:2px;padding:2px 4px}#ctx .cr button{flex:1;text-align:center;padding:4px 2px;font-size:12px}
+@media(max-width:700px){#ctx button{padding:11px 12px;font-size:15px}#ctx .cr button{padding:10px 2px}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-logo" viewBox="0 0 64 64"><defs><linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4ac5e"/><stop offset="1" stop-color="#b4501a"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#lgA)"/><rect x="8" y="47" width="48" height="4" rx="2" fill="#fff" fill-opacity=".95"/><rect x="13" y="15" width="10" height="32" rx="2.2" fill="#fff"/><rect x="13" y="29" width="10" height="2.5" fill="#c4611f" fill-opacity=".35"/><rect x="25" y="10" width="10" height="37" rx="2.2" fill="#fff" fill-opacity=".86"/><rect x="25" y="17" width="10" height="2.5" fill="#c4611f" fill-opacity=".35"/><g transform="rotate(13 47 47)"><rect x="37" y="17" width="10" height="30" rx="2.2" fill="#fff" fill-opacity=".68"/></g><path d="M16.5 15v10l2.5-2.2 2.5 2.2V15z" fill="#a8461a"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5 4.5 4.5 0 0 1 17.5 18"/><path d="M12 12v8m0 0-3-3m3 3 3-3"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="M8 4v16m0 0-3-3m3 3 3-3M16 20V4m0 0-3 3m3-3 3 3"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5-5-8 8"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+</svg>
+
+<header class="top">
+  <button id="filtBtn" class="ib mobonly" aria-label="Filters and collections"><svg class="i"><use href="#i-filter"/></svg></button>
+  <div class="brand">
+    <svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg>
+    <div><b>Bookshelf</b><small id="libname">Offline library</small></div>
+  </div>
+  <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search title, author, genre, series…" aria-label="Search"></label>
+  <div class="tools">
+    <select id="group" title="Group the library by…" aria-label="Group by"></select>
+    <select id="sort" title="Sort by…" aria-label="Sort by">
+      <option value="title">Sort: Title</option>
+      <option value="author">Sort: Author</option>
+      <option value="series">Sort: Series</option>
+      <option value="genre">Sort: Genre</option>
+      <option value="rating">Sort: Rating</option>
+      <option value="pubdate">Sort: Publication date</option>
+      <option value="added">Sort: Recently added</option>
+      <option value="modified">Sort: Recently modified</option>
+      <option value="authorlast">Sort: Author (last name)</option>
+      <option value="size">Sort: File size</option>
+      <option value="formats">Sort: Number of formats</option>
+      <option value="status">Sort: Reading status</option>
+    </select>
+    <button id="descBtn" class="ib" title="Reverse order"><svg class="i"><use href="#i-sort"/></svg></button>
+    <div class="seg"><button id="vGrid" title="Cover grid"><svg class="i"><use href="#i-grid"/></svg></button><button id="vList" title="List"><svg class="i"><use href="#i-list"/></svg></button></div>
+    <button id="fetchBtn" title="Look up metadata and covers online for the selected books"><svg class="i"><use href="#i-cloud"/></svg><span class="lbl">Fetch metadata</span></button>
+    <button id="addBtn" class="primary"><svg class="i"><use href="#i-plus"/></svg><span class="lbl">Add books</span></button>
+    <div class="menu">
+      <button id="menuBtn"><span class="lbl">Library</span><svg class="i"><use href="#i-chev"/></svg></button>
+      <div class="pop" id="pop" hidden>
+        <button data-act="importFolder">Import from a folder…</button>
+        <button data-act="importLast" hidden></button>
+        <button data-act="fetch">Fetch metadata for selected books…</button>
+        <hr>
+        <button data-act="layout">Folder organization…</button>
+        <button data-act="reorg">Reorganize all files now</button>
+        <button data-act="rescan">Rescan library</button>
+        <hr>
+        <button data-act="colls">Manage collections…</button>
+        <button data-act="rename">Rename / merge authors, series, tags…</button>
+        <button data-act="dups">Find duplicates…</button>
+        <button data-act="device">Send to eReader…</button>
+        <button data-act="reader">Reader files (browse / delete)…</button>
+        <hr>
+        <button data-act="backupZip">Backup to ZIP file…</button>
+        <button data-act="backupFolder">Backup to another folder…</button>
+        <button data-act="restoreZip">Restore from ZIP…</button>
+        <button data-act="csv">Export catalog (CSV)</button>
+        <hr>
+        <button data-act="switch">Switch library…</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="selbar" hidden></div>
+<div id="scrim"></div>
+
+<div id="layout">
+  <aside id="side"></aside>
+  <main id="main"></main>
+  <section id="detail" hidden></section>
+</div>
+<datalist id="dl_coll"></datalist><datalist id="dl_series"></datalist><datalist id="dl_pub"></datalist>
+
+<div id="welcome" hidden>
+  <div class="box">
+    <svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg>
+    <h2>Bookshelf</h2>
+    <p>A Calibre-style library manager that runs entirely in your browser. Nothing is uploaded anywhere; your books live in a folder you choose and are filed automatically (by author, genre, series… your choice) with a <code>metadata.json</code> and cover next to each book.</p>
+    <div class="stack">
+      <button id="reopenBtn" class="primary" hidden></button>
+      <button id="pickBtn" class="primary">Choose a library folder…</button>
+      <button id="opfsBtn">Use private browser storage instead</button>
+    </div>
+    <p id="fsnote" style="font-size:12px"></p>
+  </div>
+</div>
+
+<div id="modal" hidden><div id="modalBox"></div></div>
+<div id="busy" hidden><div class="box"><div id="busyMsg">Working…</div><div id="barwrap"><div id="bar"></div></div></div></div>
+<div id="toast" hidden></div>
+<div id="drop" hidden>Drop books or folders to import them</div>
+<input type="file" id="fileIn" multiple hidden>
+<input type="file" id="dirIn" webkitdirectory hidden>
+<input type="file" id="zipIn" accept=".zip" hidden>
+<input type="file" id="coverIn" accept="image/*" hidden>
+<input type="file" id="fmtIn" hidden>
+
+<script>
+'use strict';
+/* ================= ZIP (no dependencies) ================= */
+//#ZIP-START
+const td = b => new TextDecoder().decode(b);
+const te = s => new TextEncoder().encode(s);
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function pipeThrough(u8, stream) {
+  const w = stream.writable.getWriter(); w.write(u8); w.close();
+  return new Uint8Array(await new Response(stream.readable).arrayBuffer());
+}
+const inflateRaw = u8 => pipeThrough(u8, new DecompressionStream('deflate-raw'));
+const deflateRaw = u8 => pipeThrough(u8, new CompressionStream('deflate-raw'));
+
+async function openZip(blob) {
+  const size = blob.size, tailLen = Math.min(size, 65557);
+  const tail = new DataView(await blob.slice(size - tailLen).arrayBuffer());
+  let i = tailLen - 22;
+  for (; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) break;
+  if (i < 0) throw new Error('Not a valid ZIP/CBZ/EPUB file');
+  const count = tail.getUint16(i + 10, true), cdSize = tail.getUint32(i + 12, true), cdOff = tail.getUint32(i + 16, true);
+  const cd = new DataView(await blob.slice(cdOff, cdOff + cdSize).arrayBuffer());
+  const entries = new Map(); let p = 0;
+  for (let n = 0; n < count; n++) {
+    if (cd.getUint32(p, true) !== 0x02014b50) break;
+    const method = cd.getUint16(p + 10, true), csize = cd.getUint32(p + 20, true), usize = cd.getUint32(p + 24, true);
+    const nl = cd.getUint16(p + 28, true), el = cd.getUint16(p + 30, true), cl = cd.getUint16(p + 32, true), off = cd.getUint32(p + 42, true);
+    const name = td(new Uint8Array(cd.buffer, p + 46, nl));
+    entries.set(name, { name, method, csize, usize, off });
+    p += 46 + nl + el + cl;
+  }
+  return {
+    entries,
+    names: () => [...entries.keys()].filter(n => !n.endsWith('/')),
+    has: n => entries.has(n),
+    async read(name) {
+      const e = entries.get(name); if (!e) throw new Error('Missing in archive: ' + name);
+      const h = new DataView(await blob.slice(e.off, e.off + 30).arrayBuffer());
+      const start = e.off + 30 + h.getUint16(26, true) + h.getUint16(28, true);
+      const raw = new Uint8Array(await blob.slice(start, start + e.csize).arrayBuffer());
+      if (e.method === 0) return raw;
+      if (e.method === 8) return inflateRaw(raw);
+      throw new Error('Unsupported ZIP compression method ' + e.method);
+    }
+  };
+}
+
+/* entries: [{name, get: async()=>Uint8Array, store?: bool}], write: async(Uint8Array) */
+async function writeZip(entries, write) {
+  const central = []; let offset = 0;
+  const emit = async u8 => { await write(u8); offset += u8.length; };
+  for (const e of entries) {
+    const data = await e.get();
+    const crc = crc32(data);
+    let comp = data, method = 0;
+    if (!e.store && data.length > 64) { const d = await deflateRaw(data); if (d.length < data.length) { comp = d; method = 8; } }
+    const nameB = te(e.name), localOff = offset;
+    if (localOff > 0xFFFFFFFF || comp.length > 0xFFFFFFFF) throw new Error('Archive exceeds the 4 GB ZIP limit');
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, method, true);
+    lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, comp.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nameB.length, true);
+    await emit(new Uint8Array(lh.buffer)); await emit(nameB); await emit(comp);
+    central.push({ nameB, crc, method, csize: comp.length, usize: data.length, localOff });
+  }
+  const cdStart = offset;
+  for (const c of central) {
+    const h = new DataView(new ArrayBuffer(46));
+    h.setUint32(0, 0x02014b50, true); h.setUint16(4, 20, true); h.setUint16(6, 20, true); h.setUint16(8, 0x0800, true);
+    h.setUint16(10, c.method, true); h.setUint16(12, 0, true); h.setUint16(14, 0x21, true); h.setUint32(16, c.crc, true);
+    h.setUint32(20, c.csize, true); h.setUint32(24, c.usize, true); h.setUint16(28, c.nameB.length, true); h.setUint32(42, c.localOff, true);
+    await emit(new Uint8Array(h.buffer)); await emit(c.nameB);
+  }
+  const cdSize = offset - cdStart;
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, central.length, true); end.setUint16(10, central.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, cdStart, true);
+  await emit(new Uint8Array(end.buffer));
+}
+async function zipToBlob(entries, type = 'application/zip') {
+  const chunks = []; await writeZip(entries, async u8 => { chunks.push(u8); }); return new Blob(chunks, { type });
+}
+//#ZIP-END
+
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const xe = esc;
+const natCmp = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+const extOf = n => { const m = /\.([A-Za-z0-9]+)$/.exec(n); return m ? m[1].toLowerCase() : ''; };
+const stripExt = n => n.replace(/\.[A-Za-z0-9]+$/, '');
+const sanitize = s => (String(s).replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '').slice(0, 60)) || 'Untitled';
+const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+const dirOf = p => p.includes('/') ? p.slice(0, p.lastIndexOf('/') + 1) : '';
+const sortTitle = t => String(t).replace(/^(the|a|an)\s+/i, '').trim();
+const initial = t => { const c = sortTitle(t).charAt(0).toUpperCase(); return /\p{L}/u.test(c) ? c : '#'; };
+const splitList = s => String(s).split(/\s*[,;]\s*/).map(x => x.trim()).filter(Boolean);
+const uniq = a => [...new Set(a)];
+const IMG_RE = /\.(jpe?g|png|gif|webp)$/i;
+const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+const BOOK_EXTS = new Set(['xtc', 'xtch', 'epub', 'cbz', 'zip', 'pdf', 'txt', 'mobi', 'azw3', 'fb2', 'cbr', 'djvu', 'html', 'htm']);
+function resolvePath(base, rel) {
+  rel = rel.split('#')[0].split('?')[0];
+  try { rel = decodeURIComponent(rel); } catch { }
+  const out = [];
+  for (const p of (base + rel).split('/')) { if (p === '..') out.pop(); else if (p && p !== '.') out.push(p); }
+  return out.join('/');
+}
+function parseXML(text) {
+  const d = new DOMParser().parseFromString(text, 'application/xml');
+  if (d.getElementsByTagName('parsererror').length) throw new Error('XML parse error');
+  return d;
+}
+function parseMarkup(text) {
+  try { return parseXML(text); } catch { return new DOMParser().parseFromString(text, 'text/html'); }
+}
+const ns = (doc, name) => [...doc.getElementsByTagNameNS('*', name)];
+const plain = html => new DOMParser().parseFromString(html || '', 'text/html').body.textContent.trim();
+function b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+function downloadBlob(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+function toast(msg, ms = 3500) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, ms);
+}
+function busy(msg, pct) { $('#busy').hidden = false; $('#busyMsg').textContent = msg; $('#bar').style.width = (pct == null ? 100 : pct) + '%'; }
+const unbusy = () => $('#busy').hidden = true;
+const tick = () => new Promise(r => setTimeout(r, 0));
+let modalCancel = null;
+function modal(html, cls = '', onCancel = null) { const b = $('#modalBox'); b.className = cls; b.innerHTML = html; modalCancel = onCancel; $('#modal').hidden = false; return b; }
+function closeModal() { $('#modal').hidden = true; const f = modalCancel; modalCancel = null; if (f) f(); }
+
+/* ================= image sizes (header parse) ================= */
+function imgSize(u8) {
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  try {
+    if (u8[0] === 0x89 && u8[1] === 0x50) return [dv.getUint32(16), dv.getUint32(20)];
+    if (u8[0] === 0xFF && u8[1] === 0xD8) {
+      let i = 2;
+      while (i < u8.length - 9) {
+        if (u8[i] !== 0xFF) { i++; continue; }
+        const m = u8[i + 1];
+        if (m === 0xFF) { i++; continue; }
+        if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) return [dv.getUint16(i + 7), dv.getUint16(i + 5)];
+        if (m === 0xD8 || m === 0x01 || (m >= 0xD0 && m <= 0xD7)) { i += 2; continue; }
+        i += 2 + dv.getUint16(i + 2);
+      }
+    }
+    if (u8[0] === 0x47 && u8[1] === 0x49) return [dv.getUint16(6, true), dv.getUint16(8, true)];
+    if (u8[0] === 0x52 && u8[8] === 0x57) {
+      const t = String.fromCharCode(u8[12], u8[13], u8[14], u8[15]);
+      if (t === 'VP8X') return [1 + (u8[24] | u8[25] << 8 | u8[26] << 16), 1 + (u8[27] | u8[28] << 8 | u8[29] << 16)];
+      if (t === 'VP8 ') return [dv.getUint16(26, true) & 0x3fff, dv.getUint16(28, true) & 0x3fff];
+      if (t === 'VP8L') { const b = dv.getUint32(21, true); return [(b & 0x3fff) + 1, ((b >> 14) & 0x3fff) + 1]; }
+    }
+  } catch { }
+  return null;
+}
+async function makeCover(blob) {
+  try {
+    const bmp = await createImageBitmap(blob);
+    const s = Math.min(1, 600 / bmp.height), w = Math.max(1, Math.round(bmp.width * s)), h = Math.max(1, Math.round(bmp.height * s));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(bmp, 0, 0, w, h);
+    bmp.close && bmp.close();
+    return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+  } catch { return null; }
+}
+
+/* ================= EPUB reading ================= */
+async function epubInfo(zip) {
+  const container = parseXML(td(await zip.read('META-INF/container.xml')));
+  const opfPath = ns(container, 'rootfile')[0].getAttribute('full-path');
+  const opf = parseXML(td(await zip.read(opfPath)));
+  const base = dirOf(opfPath);
+  const manifest = new Map();
+  for (const it of ns(opf, 'item')) manifest.set(it.getAttribute('id'), {
+    id: it.getAttribute('id'), href: resolvePath(base, it.getAttribute('href') || ''),
+    type: it.getAttribute('media-type') || '', props: it.getAttribute('properties') || ''
+  });
+  const spine = ns(opf, 'itemref').map(i => i.getAttribute('idref'));
+  return { opfPath, opf, base, manifest, spine };
+}
+async function epubMeta(blob) {
+  const zip = await openZip(blob), info = await epubInfo(zip), opf = info.opf;
+  const first = n => { const e = ns(opf, n)[0]; return e ? e.textContent.trim() : ''; };
+  const m = { title: first('title'), authors: ns(opf, 'creator').map(e => e.textContent.trim()).filter(Boolean), publisher: first('publisher'), language: first('language'), comments: plain(first('description')), genres: uniq(ns(opf, 'subject').map(e => e.textContent.trim()).filter(Boolean)) };
+  const d = first('date'); if (/^\d{4}/.test(d)) m.pubdate = d.slice(0, 10);
+  const metas = ns(opf, 'meta');
+  const byName = n => { const e = metas.find(x => x.getAttribute('name') === n); return e ? e.getAttribute('content') : ''; };
+  m.series = byName('calibre:series'); m.seriesIndex = byName('calibre:series_index');
+  if (!m.series) {
+    const col = metas.find(x => x.getAttribute('property') === 'belongs-to-collection');
+    if (col) {
+      m.series = col.textContent.trim();
+      const id = col.getAttribute('id');
+      const gp = metas.find(x => x.getAttribute('property') === 'group-position' && (!id || x.getAttribute('refines') === '#' + id));
+      if (gp) m.seriesIndex = gp.textContent.trim();
+    }
+  }
+  for (const e of ns(opf, 'identifier')) {
+    const t = e.textContent.trim(), sch = e.getAttribute('opf:scheme') || '', c = t.replace(/^urn:isbn:/i, '').replace(/[-\s]/g, '');
+    if ((/isbn/i.test(sch + t) || /^[\d\-\s]+[\dXx]?$/.test(t)) && /^(\d{13}|\d{9}[\dXx])$/.test(c)) { m.isbn = c; break; }
+  }
+  let cov = [...info.manifest.values()].find(i => i.props.split(/\s+/).includes('cover-image'));
+  if (!cov) { const cid = byName('cover'); if (cid) cov = info.manifest.get(cid); }
+  if (!cov) cov = [...info.manifest.values()].find(i => i.type.startsWith('image/') && /cover/i.test(i.id + i.href));
+  if (cov && zip.has(cov.href)) m.cover = new Blob([await zip.read(cov.href)], { type: cov.type });
+  return m;
+}
+async function comicMeta(blob) {
+  const zip = await openZip(blob);
+  const imgs = comicImages(zip);
+  const m = {};
+  const ci = zip.names().find(n => /(^|\/)comicinfo\.xml$/i.test(n));
+  if (ci) {
+    try {
+      const x = parseXML(td(await zip.read(ci)));
+      const g = n => (ns(x, n)[0]?.textContent || '').trim();
+      m.series = g('Series'); m.seriesIndex = g('Number');
+      m.title = g('Title') || (m.series && m.seriesIndex ? `${m.series} #${m.seriesIndex}` : '');
+      const w = g('Writer') || g('Penciller'); if (w) m.authors = w.split(/\s*[,;]\s*/);
+      m.publisher = g('Publisher'); m.comments = g('Summary'); m.language = g('LanguageISO');
+      const gen = g('Genre'); if (gen) m.genres = splitList(gen);
+      const tg = g('Tags'); if (tg) m.tags = splitList(tg);
+      if (g('Year')) m.pubdate = `${g('Year')}-${(g('Month') || '1').padStart(2, '0')}-${(g('Day') || '1').padStart(2, '0')}`;
+    } catch { }
+  }
+  if (imgs.length) m.cover = new Blob([await zip.read(imgs[0])], { type: MIME[extOf(imgs[0])] || 'image/jpeg' });
+  return m;
+}
+const comicImages = zip => zip.names().filter(n => IMG_RE.test(n) && !n.startsWith('__MACOSX/') && !n.split('/').pop().startsWith('.')).sort(natCmp);
+async function extractMeta(file, ext) {
+  if (ext === 'epub') return epubMeta(file);
+  if (ext === 'cbz' || ext === 'zip') return comicMeta(file);
+  return {};
+}
+
+/* ================= EPUB building ================= */
+async function buildEpub(book, pages, assets, fixed) {
+  const uid = 'urn:uuid:' + crypto.randomUUID();
+  const title = book.title || 'Untitled', authors = book.authors?.length ? book.authors : ['Unknown'];
+  const man = [
+    '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>',
+    '<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>'
+  ], spine = [];
+  pages.forEach((p, i) => { man.push(`<item id="p${i}" href="${p.href}" media-type="application/xhtml+xml"/>`); spine.push(`<itemref idref="p${i}"/>`); });
+  assets.forEach((a, i) => man.push(`<item id="a${i}" href="${a.href}" media-type="${a.type}"${a.cover ? ' properties="cover-image"' : ''}/>`));
+  const ci = assets.findIndex(a => a.cover);
+  let toc = pages.map((p, i) => p.toc ? { href: p.href, t: p.toc } : null).filter(Boolean);
+  if (!toc.length) toc = [{ href: pages[0].href, t: title }];
+  const subjects = uniq([...(book.genres || []), ...(book.tags || [])]);
+  const meta = [
+    `<dc:identifier id="uid">${uid}</dc:identifier>`, `<dc:title>${xe(title)}</dc:title>`,
+    ...authors.map(a => `<dc:creator>${xe(a)}</dc:creator>`), `<dc:language>${xe(book.language || 'en')}</dc:language>`,
+    book.publisher ? `<dc:publisher>${xe(book.publisher)}</dc:publisher>` : '',
+    book.comments ? `<dc:description>${xe(book.comments)}</dc:description>` : '',
+    ...subjects.map(t => `<dc:subject>${xe(t)}</dc:subject>`),
+    `<meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</meta>`,
+    book.series ? `<meta name="calibre:series" content="${xe(book.series)}"/>` : '',
+    book.series && book.seriesIndex ? `<meta name="calibre:series_index" content="${xe(book.seriesIndex)}"/>` : '',
+    ci >= 0 ? `<meta name="cover" content="a${ci}"/>` : '',
+    fixed ? '<meta property="rendition:layout">pre-paginated</meta><meta property="rendition:spread">none</meta>' : ''
+  ].filter(Boolean).join('\n');
+  const opf = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid" prefix="rendition: http://www.idpf.org/vocab/rendition/#">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+${meta}
+</metadata>
+<manifest>
+${man.join('\n')}
+</manifest>
+<spine toc="ncx">
+${spine.join('\n')}
+</spine>
+</package>`;
+  const nav = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>${xe(title)}</title></head><body><nav epub:type="toc"><ol>
+${toc.map(t => `<li><a href="${t.href}">${xe(t.t)}</a></li>`).join('\n')}
+</ol></nav></body></html>`;
+  const ncx = `<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${uid}"/></head><docTitle><text>${xe(title)}</text></docTitle><navMap>
+${toc.map((t, i) => `<navPoint id="n${i}" playOrder="${i + 1}"><navLabel><text>${xe(t.t)}</text></navLabel><content src="${t.href}"/></navPoint>`).join('\n')}
+</navMap></ncx>`;
+  const S = s => async () => te(s);
+  const entries = [
+    { name: 'mimetype', get: S('application/epub+zip'), store: true },
+    { name: 'META-INF/container.xml', get: S('<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>') },
+    { name: 'OEBPS/content.opf', get: S(opf) }, { name: 'OEBPS/nav.xhtml', get: S(nav) }, { name: 'OEBPS/toc.ncx', get: S(ncx) },
+    ...pages.map(p => ({ name: 'OEBPS/' + p.href, get: S(p.xhtml) })),
+    ...assets.map(a => ({ name: 'OEBPS/' + a.href, get: a.get, store: true }))
+  ];
+  return zipToBlob(entries, 'application/epub+zip');
+}
+
+/* ================= conversions ================= */
+const CONV = { cbz: ['epub'], zip: ['epub'], epub: ['cbz', 'txt', 'html'], txt: ['epub'] };
+
+async function cbzToEpub(blob, book, progress) {
+  const zip = await openZip(blob), imgs = comicImages(zip);
+  if (!imgs.length) throw new Error('No images found in this archive');
+  const pages = [], assets = [];
+  for (let i = 0; i < imgs.length; i++) {
+    progress(`Reading page ${i + 1} of ${imgs.length}`, i / imgs.length * 100);
+    const bytes = await zip.read(imgs[i]);
+    let sz = imgSize(bytes);
+    if (!sz) { try { const b = await createImageBitmap(new Blob([bytes])); sz = [b.width, b.height]; b.close(); } catch { sz = [1200, 1800]; } }
+    const ext = extOf(imgs[i]), n = String(i + 1).padStart(4, '0');
+    assets.push({ href: `images/${n}.${ext}`, type: MIME[ext] || 'image/jpeg', get: () => zip.read(imgs[i]), cover: i === 0 });
+    pages.push({
+      href: `text/${n}.xhtml`, toc: i === 0 ? 'Start' : null,
+      xhtml: `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>${i + 1}</title><meta name="viewport" content="width=${sz[0]}, height=${sz[1]}"/><style>html,body{margin:0;padding:0;width:100%;height:100%}img{display:block;width:100%;height:100%;object-fit:contain}</style></head><body><img src="../images/${n}.${ext}" alt=""/></body></html>`
+    });
+  }
+  progress('Packing EPUB…', 99);
+  return { blob: await buildEpub(book, pages, assets, true), ext: 'epub' };
+}
+async function epubToCbz(blob, book, progress) {
+  const zip = await openZip(blob), info = await epubInfo(zip), order = [], seen = new Set();
+  const add = p => { if (zip.has(p) && !seen.has(p) && IMG_RE.test(p)) { seen.add(p); order.push(p); } };
+  for (const id of info.spine) {
+    const it = info.manifest.get(id); if (!it) continue;
+    if (it.type.startsWith('image/')) { add(it.href); continue; }
+    if (!/html/.test(it.type)) continue;
+    const doc = parseMarkup(td(await zip.read(it.href))), base = dirOf(it.href);
+    const refs = [...doc.getElementsByTagName('img')].map(e => e.getAttribute('src'))
+      .concat(ns(doc, 'image').map(e => e.getAttribute('xlink:href') || e.getAttribute('href')));
+    for (const r of refs) if (r) add(resolvePath(base, r));
+  }
+  if (!order.length) throw new Error('This EPUB contains no images to put in a CBZ');
+  const entries = order.map((p, i) => ({ name: String(i + 1).padStart(4, '0') + '.' + extOf(p), get: () => zip.read(p), store: true }));
+  progress('Packing CBZ…', 90);
+  return { blob: await zipToBlob(entries, 'application/vnd.comicbook+zip'), ext: 'cbz' };
+}
+function textOf(node) {
+  let out = '';
+  (function w(n) {
+    if (n.nodeType === 3) { out += n.nodeValue.replace(/\s+/g, ' '); return; }
+    if (n.nodeType !== 1) return;
+    const t = n.localName.toLowerCase();
+    if (t === 'script' || t === 'style' || t === 'head') return;
+    const block = /^(p|div|br|h[1-6]|li|tr|blockquote|section|article)$/.test(t);
+    if (block) out += '\n';
+    for (const c of n.childNodes) w(c);
+    if (block && t !== 'br') out += '\n';
+  })(node);
+  return out.replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+async function epubToTxt(blob, book, progress) {
+  const zip = await openZip(blob), info = await epubInfo(zip), parts = [];
+  let i = 0;
+  for (const id of info.spine) {
+    const it = info.manifest.get(id); if (!it || !/html/.test(it.type)) continue;
+    progress(`Extracting text ${++i}/${info.spine.length}`, i / info.spine.length * 100);
+    const doc = parseMarkup(td(await zip.read(it.href)));
+    const body = doc.getElementsByTagName('body')[0] || doc.documentElement;
+    const t = textOf(body); if (t) parts.push(t);
+  }
+  return { blob: new Blob([`${book.title}\n${book.authors.join(', ')}\n\n` + parts.join('\n\n* * *\n\n')], { type: 'text/plain' }), ext: 'txt' };
+}
+async function epubToHtml(blob, book, progress) {
+  const zip = await openZip(blob), info = await epubInfo(zip), secs = [];
+  let i = 0;
+  for (const id of info.spine) {
+    const it = info.manifest.get(id); if (!it || !/html/.test(it.type)) continue;
+    progress(`Converting section ${++i}/${info.spine.length}`, i / info.spine.length * 100);
+    const doc = parseMarkup(td(await zip.read(it.href))), base = dirOf(it.href);
+    for (const img of [...doc.getElementsByTagName('img')]) {
+      const p = resolvePath(base, img.getAttribute('src') || '');
+      if (zip.has(p)) img.setAttribute('src', `data:${MIME[extOf(p)] || 'image/jpeg'};base64,${b64(await zip.read(p))}`);
+    }
+    const body = doc.getElementsByTagName('body')[0] || doc.documentElement;
+    secs.push('<section>' + [...body.childNodes].map(n => n.nodeType === 1 ? new XMLSerializer().serializeToString(n) : '').join('') + '</section>');
+  }
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${xe(book.title)}</title><style>body{max-width:42em;margin:2em auto;padding:0 1em;font:18px/1.6 Georgia,serif}img{max-width:100%}section{margin-bottom:3em}</style></head><body><h1>${xe(book.title)}</h1><p><i>${xe(book.authors.join(', '))}</i></p>${secs.join('\n')}</body></html>`;
+  return { blob: new Blob([html], { type: 'text/html' }), ext: 'html' };
+}
+async function txtToEpub(blob, book, progress) {
+  const text = td(new Uint8Array(await blob.arrayBuffer())).replace(/\r\n?/g, '\n');
+  const lines = text.split('\n'), chapters = []; let cur = { t: book.title, lines: [] };
+  for (const ln of lines) {
+    if (/^\s*(chapter|part|book|prologue|epilogue)\b[\s\divxlc.:-]*.{0,60}$/i.test(ln) && ln.trim().length < 70 && cur.lines.join('').trim().length > 0) { chapters.push(cur); cur = { t: ln.trim(), lines: [] }; }
+    else if (/^\s*(chapter|part|book)\b/i.test(ln) && !cur.lines.join('').trim()) cur.t = ln.trim();
+    cur.lines.push(ln);
+  }
+  chapters.push(cur);
+  const pages = chapters.map((c, i) => {
+    const paras = c.lines.join('\n').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => `<p>${xe(p).replace(/\n/g, ' ')}</p>`).join('\n');
+    return { href: `text/c${i + 1}.xhtml`, toc: c.t, xhtml: `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml"><head><title>${xe(c.t)}</title></head><body><h2>${xe(c.t)}</h2>\n${paras}</body></html>` };
+  });
+  progress('Packing EPUB…', 90);
+  return { blob: await buildEpub(book, pages, [], false), ext: 'epub' };
+}
+const CONVERTERS = { 'cbz>epub': cbzToEpub, 'zip>epub': cbzToEpub, 'epub>cbz': epubToCbz, 'epub>txt': epubToTxt, 'epub>html': epubToHtml, 'txt>epub': txtToEpub };
+
+/* ================= categories & on-disk layout ================= */
+//#LAYOUT-START
+const STAT_LABEL = { '': 'No status', unread: 'Unread', reading: 'Reading', finished: 'Finished' }, STAT_ORDER = { reading: 0, unread: 1, '': 2, finished: 3 };
+const bookSize = b => b.formats.reduce((n, f) => n + (f.size || 0), 0);
+const lastName = s => String(s || '').trim().split(/\s+/).pop();
+const FACETS = [
+  { k: 'authors', label: 'Authors', get: b => b.authors },
+  { k: 'series', label: 'Series', get: b => b.series ? [b.series] : [], none: 1 },
+  { k: 'genres', label: 'Genres', get: b => b.genres, none: 1 },
+  { k: 'tags', label: 'Tags', get: b => b.tags, none: 1 },
+  { k: 'collections', label: 'Collections', get: b => b.collections || [], none: 1 },
+  { k: 'status', label: 'Reading status', get: b => [STAT_LABEL[b.status || '']] },
+  { k: 'publisher', label: 'Publishers', get: b => b.publisher ? [b.publisher] : [], none: 1 },
+  { k: 'year', label: 'Year', get: b => b.pubdate ? [b.pubdate.slice(0, 4)] : [], none: 1, desc: 1 },
+  { k: 'language', label: 'Languages', get: b => b.language ? [b.language] : [], none: 1 },
+  { k: 'rating', label: 'Rating', get: b => b.rating ? ['★'.repeat(b.rating)] : [], none: 1, desc: 1 },
+  { k: 'formats', label: 'Formats', get: b => b.formats.map(x => x.ext.toUpperCase()) },
+  { k: 'initial', label: 'Title (A–Z)', get: b => [initial(b.title)] },
+  { k: 'missing', label: 'Needs attention', get: b => [!b.hasCover && 'No cover', !b.comments && 'No description', !b.genres.length && 'No genre', b.authors[0] === 'Unknown' && 'Unknown author'].filter(Boolean) }
+];
+const facetOf = k => FACETS.find(f => f.k === k);
+const valuesOf = (b, f) => { const v = f.get(b); return v.length ? v : (f.none ? ['(none)'] : []); };
+const facetOrder = f => (a, b) => ((a === '(none)') - (b === '(none)')) || (f.desc ? natCmp(b, a) : natCmp(a, b));
+
+const TOKENS = {
+  author: b => b.authors[0] || 'Unknown',
+  genre: b => b.genres[0] || 'Unsorted',
+  series: b => b.series || 'No Series',
+  publisher: b => b.publisher || 'Unknown Publisher',
+  year: b => b.pubdate ? b.pubdate.slice(0, 4) : 'Unknown Year',
+  language: b => b.language || 'Unknown Language',
+  format: b => (b.formats[0]?.ext || 'other').toUpperCase(),
+  initial: b => initial(b.title),
+  collection: b => (b.collections || [])[0] || 'No Collection'
+};
+const PRESETS = [
+  ['{author}', 'Author'], ['{genre}/{author}', 'Genre / Author'], ['{genre}/{series}', 'Genre / Series'],
+  ['{author}/{series}', 'Author / Series'], ['{series}', 'Series'], ['{publisher}/{series}', 'Publisher / Series'],
+  ['{year}/{author}', 'Year / Author'], ['{language}/{author}', 'Language / Author'], ['{format}/{author}', 'Format / Author'],
+  ['{initial}/{author}', 'Title initial / Author'], ['{collection}/{author}', 'Collection / Author'], ['', 'Flat (no subfolders)']
+];
+let layout = { template: '{author}', auto: true };
+function badTokens(tpl) { return [...tpl.matchAll(/\{(\w+)\}/g)].map(m => m[1]).filter(t => !TOKENS[t]); }
+function layoutSegments(b, tpl = layout.template) {
+  return tpl.split('/').map(s => s.replace(/\{(\w+)\}/g, (m, t) => TOKENS[t] ? TOKENS[t](b) : '').trim())
+    .filter(Boolean).map(sanitize);
+}
+//#LAYOUT-END
+
+/* ================= storage ================= */
+let root = null, books = [], filters = {}, query = '', pendingHandle = null, lastList = [], lastId = null;
+let selected = new Set();
+let colls = [], smart = [], selMode = false, lpFired = 0;
+const selBooks = () => [...selected].map(id => books.find(b => b.id === id)).filter(Boolean);
+const cur = () => selected.size === 1 ? books.find(b => b.id === [...selected][0]) : null;
+const prefs = (() => { try { return JSON.parse(localStorage.getItem('bookshelf.prefs') || '{}'); } catch { return {}; } })();
+const savePrefs = () => { try { localStorage.setItem('bookshelf.prefs', JSON.stringify(prefs)); } catch { } };
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('bookshelf', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const kvGet = async k => { try { const db = await idb(); return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }); } catch { return undefined; } };
+const kvSet = async (k, v) => { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = rej; }); } catch { } };
+
+//#FS-START
+async function writeFile(dir, name, data) {
+  const fh = await dir.getFileHandle(name, { create: true });
+  const w = await fh.createWritable(); await w.write(data); await w.close();
+}
+async function* walk(dir, prefix = '') {
+  for await (const [name, h] of dir.entries()) {
+    if (h.kind === 'directory') yield* walk(h, prefix + name + '/'); else yield { path: prefix + name, handle: h, parent: dir };
+  }
+}
+const recJSON = b => JSON.stringify(b, (k, v) => k.startsWith('_') ? undefined : v, 1);
+const saveMeta = b => writeFile(b._dir, 'metadata.json', recJSON(b));
+
+/* Move a file between directories: native move() when supported, otherwise verified copy + delete */
+async function moveFile(srcDir, name, destDir) {
+  const fh = await srcDir.getFileHandle(name);
+  if (typeof fh.move === 'function') { try { await fh.move(destDir); return; } catch { /* fall back to copy */ } }
+  const f = await fh.getFile();
+  const out = await destDir.getFileHandle(name, { create: true }), w = await out.createWritable();
+  try { await w.write(f); await w.close(); } catch (e) { try { await w.abort(); } catch { } try { await destDir.removeEntry(name); } catch { } throw e; }
+  const chk = await (await destDir.getFileHandle(name)).getFile();
+  if (chk.size !== f.size) { try { await destDir.removeEntry(name); } catch { } throw new Error('Copy verification failed for ' + name); }
+  await srcDir.removeEntry(name);
+}
+/* remove empty folders from the deepest of `segs` upward (never removes `base` itself) */
+async function pruneEmpty(base, segs) {
+  for (let i = segs.length; i > 0; i--) {
+    try {
+      let parent = base; for (let j = 0; j < i - 1; j++) parent = await parent.getDirectoryHandle(segs[j]);
+      const dir = await parent.getDirectoryHandle(segs[i - 1]);
+      let empty = true; for await (const _ of dir.entries()) { empty = false; break; }
+      if (!empty) break;
+      await parent.removeEntry(segs[i - 1]);
+    } catch { break; }
+  }
+}
+const needsMove = b => layoutSegments(b).join('/') !== b._path.slice(0, -1).join('/');
+/* move a book's folder so it matches the current layout; rolls back on failure */
+async function relocate(b) {
+  const segs = layoutSegments(b), oldParent = b._path.slice(0, -1);
+  if (segs.join('/') === oldParent.join('/')) return false;
+  const names = [];
+  for await (const [n, h] of b._dir.entries()) {
+    if (h.kind !== 'file') throw new Error(`“${b.title}” has an unexpected subfolder, so it was not moved`);
+    names.push(n);
+  }
+  names.sort((x, y) => (x === 'metadata.json') - (y === 'metadata.json'));
+  let d = root; for (const s of segs) d = await d.getDirectoryHandle(s, { create: true });
+  const dest = await d.getDirectoryHandle(b._name, { create: true }), moved = [];
+  try { for (const n of names) { await moveFile(b._dir, n, dest); moved.push(n); } }
+  catch (e) {
+    for (const n of moved.reverse()) { try { await moveFile(dest, n, b._dir); } catch { } }
+    try { await d.removeEntry(b._name); } catch { }
+    await pruneEmpty(root, segs); throw e;
+  }
+  try { await b._parent.removeEntry(b._name); } catch { }
+  b._dir = dest; b._parent = d; b._path = [...segs, b._name];
+  await pruneEmpty(root, oldParent);
+  return true;
+}
+//#FS-END
+
+async function organize(list, force = false) {
+  if (!layout.auto && !force) return 0;
+  const todo = list.filter(needsMove); if (!todo.length) return 0;
+  const errs = []; let n = 0, ok = 0;
+  for (const b of todo) {
+    busy(`Organizing files… ${++n} of ${todo.length}`, n / todo.length * 100); await tick();
+    try { await relocate(b); ok++; } catch (e) { console.error(e); errs.push(e.message); }
+  }
+  unbusy(); if (errs.length) toast(`${errs.length} book(s) couldn't be moved: ${errs[0]}`, 7000);
+  return ok;
+}
+async function loadConfig() {
+  layout = { template: '{author}', auto: true }; colls = []; smart = [];
+  try {
+    const c = JSON.parse(await (await (await root.getFileHandle('.bookshelf.json')).getFile()).text());
+    colls = Array.isArray(c.collections) ? c.collections : []; smart = Array.isArray(c.smart) ? c.smart : [];
+    if (c.layout && typeof c.layout.template === 'string') layout = { template: c.layout.template, auto: c.layout.auto !== false };
+  } catch { }
+}
+const saveConfig = () => writeFile(root, '.bookshelf.json', JSON.stringify({ layout, collections: colls, smart }, null, 1));
+
+function normalize(m) {
+  const arr = v => Array.isArray(v) ? v : [];
+  m.id = m.id || crypto.randomUUID().slice(0, 8);
+  m.title = m.title || 'Untitled'; m.authors = arr(m.authors).length ? m.authors : ['Unknown'];
+  m.series = m.series || ''; m.seriesIndex = m.seriesIndex || ''; m.genres = arr(m.genres); m.tags = arr(m.tags);
+  m.publisher = m.publisher || ''; m.language = m.language || ''; m.pubdate = m.pubdate || ''; m.comments = m.comments || '';
+  m.rating = +m.rating || 0; m.added = m.added || new Date().toISOString(); m.modified = m.modified || m.added;
+  m.hasCover = !!m.hasCover; m.formats = arr(m.formats); m.isbn = m.isbn || '';
+  m.collections = arr(m.collections); m.status = ['unread', 'reading', 'finished'].includes(m.status) ? m.status : '';
+  return m;
+}
+async function openLibrary(handle, remember = true) {
+  root = handle; if (remember) await kvSet('root', handle);
+  $('#welcome').hidden = true;
+  $('#libname').textContent = handle.name === 'bookshelf-library' ? 'Private browser storage' : handle.name;
+  await loadConfig();
+  await scan();
+}
+async function scanDir(dir, parent, path) {
+  const subs = []; let hasMeta = false;
+  for await (const [n, h] of dir.entries()) { if (h.kind === 'file') { if (n === 'metadata.json') hasMeta = true; } else subs.push([n, h]); }
+  if (hasMeta && path.length) {
+    try {
+      const m = normalize(JSON.parse(await (await (await dir.getFileHandle('metadata.json')).getFile()).text()));
+      m._dir = dir; m._parent = parent; m._name = path[path.length - 1]; m._path = path; books.push(m);
+      if (books.length % 50 === 0) { busy(`Scanning library… ${books.length} books`); await tick(); }
+    } catch { }
+    return;
+  }
+  if (path.length >= 6) return;
+  for (const [n, h] of subs) await scanDir(h, dir, [...path, n]);
+}
+async function scan() {
+  busy('Scanning library…'); await tick();
+  books = []; coverCache.forEach(u => URL.revokeObjectURL(u)); coverCache.clear();
+  try { await scanDir(root, null, []); } finally { unbusy(); }
+  selected = new Set(); render();
+}
+
+/* ================= import ================= */
+const dupFold = x => String(x || '').toLowerCase().replace(/[_\-‐-―]+/g, ' ').replace(/\s+/g, ' ').trim();
+const dupKey = (t, a) => `${dupFold(t)}|${dupFold(a[0])}`;
+async function addBook(file, { dup = 'merge' } = {}) {
+  const ext = extOf(file.name) || 'bin'; let m = {};
+  try { m = await extractMeta(file, ext); } catch (e) { console.warn('metadata', file.name, e); }
+  const title = (m.title || stripExt(file.name)).trim() || 'Untitled';
+  const authors = m.authors?.length ? m.authors : ['Unknown'];
+  const now = new Date().toISOString();
+  const verify = async (dir, name) => { const f = await (await dir.getFileHandle(name)).getFile(); if (f.size !== file.size) throw new Error('Size mismatch after copying ' + file.name); };
+  if (dup !== 'keep') {
+    const key = dupKey(title, authors), ex = books.find(b => dupKey(b.title, b.authors) === key);
+    if (ex) {
+      if (dup === 'skip' || ex.formats.some(f => f.ext === ext)) return { status: 'skipped', rec: ex };
+      const name = `${sanitize(ex.title)} - ${sanitize(ex.authors[0])}.${ext}`;
+      await writeFile(ex._dir, name, file); await verify(ex._dir, name);
+      ex.formats.push({ ext, file: name, size: file.size });
+      if (!ex.hasCover && m.cover) { const cb = await makeCover(m.cover); if (cb) { await writeFile(ex._dir, 'cover.jpg', cb); ex.hasCover = true; } }
+      ex.modified = now; await saveMeta(ex);
+      return { status: 'merged', rec: ex };
+    }
+  }
+  const id = crypto.randomUUID().slice(0, 8), fname = `${sanitize(title)} - ${sanitize(authors[0])}.${ext}`;
+  const rec = {
+    id, title, authors, series: m.series || '', seriesIndex: m.seriesIndex || '', genres: m.genres || [], tags: m.tags || [],
+    publisher: m.publisher || '', language: m.language || '', pubdate: m.pubdate || '', comments: m.comments || '', isbn: m.isbn || '', rating: 0, collections: [], status: '',
+    added: now, modified: now, hasCover: false, formats: [{ ext, file: fname, size: file.size }]
+  };
+  const segs = layoutSegments(rec), bn = `${sanitize(title)} (${id})`;
+  let d = root; for (const s of segs) d = await d.getDirectoryHandle(s, { create: true });
+  const bd = await d.getDirectoryHandle(bn, { create: true });
+  try {
+    await writeFile(bd, fname, file); await verify(bd, fname);
+    if (m.cover) { const cb = await makeCover(m.cover); if (cb) { await writeFile(bd, 'cover.jpg', cb); rec.hasCover = true; } }
+    await writeFile(bd, 'metadata.json', recJSON(rec));
+  } catch (e) { try { await d.removeEntry(bn, { recursive: true }); } catch { } await pruneEmpty(root, segs); throw e; }
+  rec._dir = bd; rec._parent = d; rec._name = bn; rec._path = [...segs, bn]; books.push(rec);
+  return { status: 'added', rec };
+}
+async function removeOriginal(it) {
+  if (it.parent) { await it.parent.removeEntry(it.name); return true; }
+  if (it.handle && typeof it.handle.remove === 'function') { await it.handle.remove(); return true; }
+  return false;
+}
+function askImport(items) {
+  return new Promise(res => {
+    const canMove = items.some(i => i.parent) || (typeof FileSystemFileHandle !== 'undefined' && typeof FileSystemFileHandle.prototype.remove === 'function' && items.some(i => i.handle));
+    const srcs = [...new Set(items.map(i => i.srcRoot?.name).filter(Boolean))];
+    const n = items.length, pat = layout.template ? layout.template.replace(/\{(\w+)\}/g, (m, t) => t[0].toUpperCase() + t.slice(1)) + ' / Title' : 'Title';
+    const box = modal(`<h3>Import ${n} file${n === 1 ? '' : 's'}</h3>
+      <div class="mute">${srcs.length ? 'From: ' + esc(srcs.join(', ')) : 'From: the files you selected'}</div>
+      <label class="opt"><input type="radio" name="imode" value="copy"${prefs.impMode !== 'move' || !canMove ? ' checked' : ''}> <b>Copy</b> — leave the originals where they are</label>
+      <label class="opt"><input type="radio" name="imode" value="move"${prefs.impMode === 'move' && canMove ? ' checked' : ''}${canMove ? '' : ' disabled'}> <b>Move</b> — delete each original once it is safely in the library</label>
+      ${canMove ? '' : '<div class="warn">Your browser can’t delete files that were added this way. Use Library ▾ → “Import from a folder…” to move files.</div>'}
+      <label class="l">Duplicates (same title and first author)</label>
+      <select id="idup"><option value="merge">Add as extra format; skip exact duplicates</option><option value="skip">Skip them</option><option value="keep">Import anyway as new books</option></select>
+      <label class="opt" id="iprunel"><input type="checkbox" id="iprune"${prefs.impPrune === false ? '' : ' checked'}> Remove source folders that are left empty</label>
+      <p><small>Books will be filed in the library as <b>${esc(pat)}</b>. Skipped duplicates are never deleted from the source. Originals are only removed after the copy in the library is verified.</small></p>
+      <div class="btns"><button id="imGo" class="primary">Import</button><button id="imNo">Cancel</button></div>`);
+    box.querySelector('#idup').value = prefs.impDup || 'merge';
+    const sync = () => { box.querySelector('#iprunel').hidden = box.querySelector('input[name=imode]:checked').value !== 'move'; };
+    box.querySelectorAll('input[name=imode]').forEach(r => r.onchange = sync); sync();
+    box.querySelector('#imNo').onclick = () => { closeModal(); res(null); };
+    box.querySelector('#imGo').onclick = () => {
+      const o = { mode: box.querySelector('input[name=imode]:checked').value, dup: box.querySelector('#idup').value, prune: box.querySelector('#iprune').checked };
+      closeModal(); res(o);
+    };
+  });
+}
+async function startImport(items) {
+  if (!root || !items.length) return;
+  const opts = await askImport(items); if (!opts) return;
+  Object.assign(prefs, { impMode: opts.mode, impDup: opts.dup, impPrune: opts.prune }); savePrefs();
+  if (opts.mode === 'move') {
+    for (const r of new Set(items.map(i => i.srcRoot).filter(Boolean))) {
+      try {
+        if (!(await hasPerm(r, 'readwrite')) && !(await askPerm(r, 'readwrite'))) { toast('Permission to change the source folder was denied, so files will be copied instead', 6000); opts.mode = 'copy'; break; }
+      } catch { opts.mode = 'copy'; break; }
+    }
+  }
+  const stat = { added: 0, merged: 0, skipped: 0, failed: [], removed: 0, kept: 0 }, touched = [];
+  let last = null;
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    busy(`Importing ${i + 1} of ${items.length}: ${it.name}`, i / items.length * 100); await tick();
+    try {
+      const file = it.file || await it.handle.getFile();
+      const r = await addBook(file, { dup: opts.dup });
+      if (r.status === 'skipped') { stat.skipped++; continue; }
+      stat[r.status]++; last = r.rec;
+      if (opts.mode === 'move') {
+        try { if (await removeOriginal(it)) { stat.removed++; touched.push(it); } else stat.kept++; } catch { stat.kept++; }
+      }
+    } catch (e) { console.error(e); stat.failed.push(it.name); }
+  }
+  if (opts.mode === 'move' && opts.prune) {
+    const seen = new Set();
+    for (const it of touched.filter(t => t.srcRoot && t.segs.length > 1).sort((a, b) => b.segs.length - a.segs.length)) {
+      const k = it.segs.slice(0, -1).join('/'); if (seen.has(k)) continue; seen.add(k);
+      await pruneEmpty(it.srcRoot, it.segs.slice(0, -1));
+    }
+  }
+  unbusy();
+  selected = last ? new Set([last.id]) : new Set(); render();
+  const parts = [];
+  if (stat.added) parts.push(`${stat.added} added`);
+  if (stat.merged) parts.push(`${stat.merged} merged as extra formats`);
+  if (stat.skipped) parts.push(`${stat.skipped} duplicates skipped`);
+  if (opts.mode === 'move') parts.push(`${stat.removed} originals moved` + (stat.kept ? `, ${stat.kept} originals couldn’t be deleted` : ''));
+  if (stat.failed.length) parts.push(`failed: ${stat.failed.slice(0, 3).join(', ')}`);
+  toast(parts.join(' · ') || 'Nothing imported', 8000);
+}
+async function sameOrNested(dir) {
+  try {
+    if (await dir.isSameEntry(root)) return 'That is the library folder itself.';
+    if (await root.resolve(dir)) return 'That folder is inside the library folder.';
+    if (await dir.resolve(root)) return 'That folder contains the library folder; pick a folder that doesn’t.';
+  } catch { }
+  return '';
+}
+async function importFromFolder(saved) {
+  try {
+    let dir = saved;
+    if (dir) { if (!(await hasPerm(dir, 'read')) && !(await askPerm(dir, 'read'))) return toast('Permission denied'); }
+    else dir = await showDirectoryPicker({ mode: 'read', id: 'bookshelf-src' });
+    const bad = await sameOrNested(dir); if (bad) return alert(bad);
+    busy('Looking for books…'); const items = [];
+    for await (const x of walk(dir)) if (BOOK_EXTS.has(extOf(x.path))) items.push({ name: x.handle.name, handle: x.handle, parent: x.parent, segs: x.path.split('/'), srcRoot: dir });
+    unbusy();
+    if (!items.length) return toast('No books found in that folder');
+    await kvSet('importSrc', dir); refreshMenu();
+    await startImport(items);
+  } catch (e) { unbusy(); if (e.name !== 'AbortError') alert(e.message); }
+}
+async function refreshMenu() {
+  const h = await kvGet('importSrc'), b = document.querySelector('[data-act=importLast]');
+  if (h && h.kind === 'directory' && window.showDirectoryPicker) { b.hidden = false; b.textContent = `Import again from “${h.name}”`; b.onsrc = h; } else b.hidden = true;
+}
+
+/* ================= view ================= */
+const coverCache = new Map();
+async function coverURL(b) {
+  if (!b.hasCover) return null;
+  if (coverCache.has(b.id)) return coverCache.get(b.id);
+  try {
+    const f = await (await b._dir.getFileHandle('cover.jpg')).getFile();
+    const u = URL.createObjectURL(f); coverCache.set(b.id, u); return u;
+  } catch { return null; }
+}
+const hue = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const io = new IntersectionObserver(es => es.forEach(async e => {
+  if (!e.isIntersecting) return; io.unobserve(e.target);
+  const b = books.find(x => x.id === e.target.dataset.id); if (!b) return;
+  const u = await coverURL(b); if (u) { e.target.querySelector('.nc')?.remove(); e.target.insertAdjacentHTML('afterbegin', `<img src="${u}" alt="">`); }
+}), { rootMargin: '300px' });
+
+const openFacets = new Set(['genres', 'authors', 'collections', 'smart']);
+let facetLists = {};
+function renderSide() {
+  facetLists = {};
+  let h = `<button class="all${Object.keys(filters).length ? '' : ' primary'}" data-all>All books (${books.length})</button>`;
+  for (const f of FACETS) {
+    const m = new Map(); for (const b of books) for (const v of valuesOf(b, f)) m.set(v, (m.get(v) || 0) + 1);
+    if (f.k === 'collections') for (const c of colls) if (!m.has(c)) m.set(c, 0);
+    const arr = [...m.entries()].sort((a, b) => facetOrder(f)(a[0], b[0])); facetLists[f.k] = arr.map(x => x[0]);
+    if (!arr.length) continue;
+    h += `<details data-k="${f.k}"${openFacets.has(f.k) ? ' open' : ''}><summary>${f.label} (${arr.length})</summary>` +
+      arr.map(([v, n], i) => `<div class="it${filters[f.k] === v ? ' on' : ''}" data-k="${f.k}" data-i="${i}"><span>${esc(v)}</span><span>${n}</span></div>`).join('') + (f.k === 'collections' ? '<div class="it" data-x="newcoll"><span>＋ New collection…</span><span></span></div>' : '') + '</details>';
+  }
+  h = h.replace('</button>', '</button>' + smartHTML());
+  $('#side').innerHTML = h;
+  $('#dl_coll').innerHTML = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp).map(s => `<option value="${esc(s)}">`).join('');
+  $('#dl_series').innerHTML = uniq(books.map(b => b.series).filter(Boolean)).sort(natCmp).map(s => `<option value="${esc(s)}">`).join('');
+  $('#dl_pub').innerHTML = uniq(books.map(b => b.publisher).filter(Boolean)).sort(natCmp).map(s => `<option value="${esc(s)}">`).join('');
+}
+const titleCmp = (a, b) => natCmp(sortTitle(a.title), sortTitle(b.title));
+const seriesCmp = (a, b) => natCmp(a.series || '￿', b.series || '￿') || ((parseFloat(a.seriesIndex) || 0) - (parseFloat(b.seriesIndex) || 0)) || titleCmp(a, b);
+function visible() {
+  const q = query.trim().toLowerCase();
+  const r = books.filter(b => {
+    for (const [k, v] of Object.entries(filters)) if (!valuesOf(b, facetOf(k)).includes(v)) return false;
+    if (q && !(`${b.title} ${b.authors.join(' ')} ${b.series} ${b.genres.join(' ')} ${b.tags.join(' ')} ${b.publisher} ${b.comments}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const s = prefs.group === 'series' ? 'series' : (prefs.sort || 'title');
+  const cmp = {
+    title: titleCmp, author: (a, b) => natCmp(a.authors[0] || '', b.authors[0] || '') || titleCmp(a, b), series: seriesCmp,
+    genre: (a, b) => natCmp(a.genres[0] || '￿', b.genres[0] || '￿') || titleCmp(a, b),
+    rating: (a, b) => b.rating - a.rating || titleCmp(a, b), pubdate: (a, b) => (b.pubdate || '').localeCompare(a.pubdate || '') || titleCmp(a, b),
+    added: (a, b) => b.added.localeCompare(a.added), modified: (a, b) => b.modified.localeCompare(a.modified),
+    authorlast: (a, b) => natCmp(lastName(a.authors[0]), lastName(b.authors[0])) || seriesCmp(a, b),
+    size: (a, b) => bookSize(b) - bookSize(a) || titleCmp(a, b), formats: (a, b) => b.formats.length - a.formats.length || titleCmp(a, b),
+    status: (a, b) => STAT_ORDER[a.status || ''] - STAT_ORDER[b.status || ''] || titleCmp(a, b)
+  }[s];
+  r.sort(cmp); if (prefs.desc) r.reverse();
+  return r;
+}
+const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+const ph = b => `<div class="nc" style="--h:${hue(b.title)}"><span class="pt">${esc(b.title)}</span><span class="pa">${esc(b.authors[0] || '')}</span></div>`;
+const cardsHTML = list => '<div class="grid">' + list.map(b => `<div class="card${selected.has(b.id) ? ' sel' : ''}" data-id="${b.id}"><div class="cv" data-id="${b.id}">${ph(b)}<span class="ck">${ic('check')}</span><span class="fb">${esc(b.formats.map(x => x.ext.toUpperCase()).join(' · '))}</span>${b.series && b.seriesIndex ? `<span class="sb">#${esc(b.seriesIndex)}</span>` : ''}</div><div class="t">${esc(b.title)}</div><div class="a">${esc(b.authors.join(' & '))}</div></div>`).join('') + '</div>';
+const rowsHTML = list => '<table><colgroup><col style="width:28%"><col style="width:20%"><col style="width:16%"><col style="width:16%"><col style="width:10%"><col style="width:10%"></colgroup><thead><tr><th>Title</th><th>Author(s)</th><th>Series</th><th>Genre</th><th>Formats</th><th>Added</th></tr></thead><tbody>' + list.map(b => `<tr class="row${selected.has(b.id) ? ' sel' : ''}" data-id="${b.id}"><td>${esc(b.title)}</td><td>${esc(b.authors.join(' & '))}</td><td>${esc(b.series)}${b.seriesIndex ? ' #' + esc(b.seriesIndex) : ''}</td><td>${esc(b.genres.join(', '))}</td><td>${b.formats.map(x => x.ext.toUpperCase()).join(', ')}</td><td>${b.added.slice(0, 10)}</td></tr>`).join('') + '</tbody></table>';
+function render() {
+  $('#sort').value = prefs.sort || 'title'; $('#group').value = prefs.group || '';
+  $('#vGrid').classList.toggle('on', prefs.view !== 'list'); $('#vList').classList.toggle('on', prefs.view === 'list');
+  renderSide();
+  const list = visible(), view = prefs.view || 'grid', body = view === 'grid' ? cardsHTML : rowsHTML, gf = prefs.group && facetOf(prefs.group);
+  lastList = list;
+  let h = '';
+  if (!books.length) h = `<div class="empty"><svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg><h2>Your shelf is empty</h2><p>Click <b>Add books</b>, drop files or folders here, or use <b>Library → Import from a folder</b>. Then select books and use <b>Fetch metadata</b> to pull covers and details from the web.</p></div>`;
+  else {
+    h = `<div id="count">${list.length} of ${books.length} book${books.length === 1 ? '' : 's'}</div>`;
+    const ch = Object.entries(filters);
+    if (ch.length) h += '<div class="chips">' + ch.map(([k, v]) => `<span class="chip" data-chip="${k}">${esc(facetOf(k).label)}: ${esc(v)} ✕</span>`).join('') + '</div>';
+    if (!list.length) h += '<div class="empty small">No books match the current search and filters.</div>';
+    else if (!gf) h += body(list);
+    else {
+      const m = new Map();
+      for (const b of list) for (const v of valuesOf(b, gf)) { if (!m.has(v)) m.set(v, []); m.get(v).push(b); }
+      h += [...m.entries()].sort((a, b) => facetOrder(gf)(a[0], b[0])).map(([v, l]) => `<h3 class="grp">${esc(v)}<span>${l.length}</span></h3>${body(l)}`).join('');
+    }
+  }
+  $('#main').innerHTML = h;
+  if (view === 'grid') $('#main').querySelectorAll('.cv').forEach(el => io.observe(el));
+  updateSelBar(); renderDetail();
+}
+function refreshSelection() {
+  if (!selected.size) selMode = false;
+  document.querySelectorAll('.card[data-id],tr.row[data-id]').forEach(el => el.classList.toggle('sel', selected.has(el.dataset.id)));
+  updateSelBar(); renderDetail();
+}
+function updateSelBar() {
+  const el = $('#selbar'), n = selected.size;
+  document.body.classList.toggle('selmode', selMode && n > 0); $('#filtBtn').classList.toggle('primary', Object.keys(filters).length > 0);
+  if (!n) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<b>${n} selected</b>${n < lastList.length ? `<button class="ghost" id="sbAll">Select all ${lastList.length} shown</button>` : ''}<span class="sp"></span><button id="sbMore" class="ib" title="More actions">⋯</button><button id="sbOrg">${ic('plus')} Organize…</button><button id="sbSend">${ic('send')} Send to eReader…</button><button id="sbFetch">${ic('cloud')} Fetch metadata &amp; covers</button><button id="sbClear" class="ghost">${ic('x')} Clear</button>`;
+}
+async function renderDetail() {
+  const el = $('#detail');
+  if (!selected.size) { el.hidden = true; return; }
+  el.hidden = false;
+  if (selected.size > 1) {
+    const n = selected.size;
+    el.innerHTML = `<div class="dbody"><h3>${n} books selected</h3><p class="mute">Leave a field empty to keep it unchanged. Ctrl/⌘-click toggles books, Shift-click selects a range, Ctrl/⌘+A selects everything shown.</p>
+    <div class="btns" style="margin-top:0"><button class="primary" id="bulkOrg">${ic('plus')} Organize…</button><button id="bulkSend">${ic('send')} Send to eReader…</button><button id="bulkFetch">${ic('cloud')} Fetch metadata</button></div>
+    <h4>Edit all</h4>
+    <label>Add genres (comma separated)</label><input id="b_genres">
+    <label>Add tags (comma separated)</label><input id="b_tags">
+    <label>Set series</label><input id="b_series" list="dl_series">
+    <label>Set author(s) — separate with &amp;</label><input id="b_authors">
+    <label>Set publisher</label><input id="b_pub" list="dl_pub">
+    <label>Set language</label><input id="b_lang">
+    <div class="btns"><button class="primary" id="bulkApply">Apply to ${n} books</button><button id="bulkTagGenre">Copy tags → genres</button></div></div>
+    <div class="savebar"><button id="bulkClear">Clear selection</button><span class="sp"></span><button id="bulkDel" class="danger">Delete ${n} books…</button></div>`;
+    return;
+  }
+  const b = cur(); if (!b) { el.hidden = true; return; }
+  const u = await coverURL(b);
+  if (cur() !== b) return;
+  const conv = f => (CONV[f.ext] || []).map(t => `<option value="${t}">→ ${t.toUpperCase()}</option>`).join('');
+  el.innerHTML = `<div class="dbody">
+  <div class="dtop"><div class="dcov"><div class="cv">${u ? `<img src="${u}" alt="">` : ph(b)}</div></div>
+  <div class="dhead"><label style="margin-top:0">Title</label><input id="f_title" value="${esc(b.title)}"><label>Author(s) — separate with &amp;</label><input id="f_authors" value="${esc(b.authors.join(' & '))}"></div></div>
+  <div class="row"><button id="chCover">${ic('image')} Cover…</button><button id="fetchOne">${ic('cloud')} Fetch online</button></div>
+  <h4>Series</h4>
+  <div class="two"><div><label>Series</label><input id="f_series" list="dl_series" value="${esc(b.series)}"></div><div><label>Number</label><input id="f_idx" value="${esc(b.seriesIndex)}"></div></div>
+  <h4>Classification</h4>
+  <label>Genres (comma separated)</label><input id="f_genres" value="${esc(b.genres.join(', '))}">
+  <label>Tags (comma separated)</label><input id="f_tags" value="${esc(b.tags.join(', '))}">
+  <label>Collections (comma separated)</label><input id="f_coll" value="${esc(b.collections.join(', '))}" list="dl_coll">
+  <label>Reading status</label><select id="f_stat">${Object.entries(STAT_LABEL).map(([k, v]) => `<option value="${k}"${(b.status || '') === k ? ' selected' : ''}>${v}</option>`).join('')}</select>
+  <h4>Publication</h4>
+  <div class="two"><div><label>Publisher</label><input id="f_pub" list="dl_pub" value="${esc(b.publisher)}"></div><div><label>Language</label><input id="f_lang" value="${esc(b.language)}"></div></div>
+  <div class="two"><div><label>Published</label><input id="f_date" type="date" value="${esc(b.pubdate)}"></div><div><label>Rating</label><select id="f_rate">${[0, 1, 2, 3, 4, 5].map(n => `<option value="${n}"${b.rating == n ? ' selected' : ''}>${n ? '★'.repeat(n) : '—'}</option>`).join('')}</select></div></div>
+  <label>ISBN</label><input id="f_isbn" value="${esc(b.isbn || '')}">
+  <label>Description</label><textarea id="f_cm" rows="6">${esc(b.comments)}</textarea>
+  <h4>Files</h4>
+  ${b.formats.map((f, i) => `<div class="fmt"><b>${esc(f.ext.toUpperCase())}</b><span class="sz">${fmtSize(f.size)}</span>
+    <button data-dl="${i}">Download</button>
+    ${conv(f) ? `<select data-cv="${i}"><option value="">Convert…</option>${conv(f)}</select>` : ''}
+    ${b.formats.length > 1 ? `<button data-rm="${i}" class="danger">✕</button>` : ''}</div>`).join('')}
+  <div class="btns"><button id="sendOne">${ic('send')} Send to eReader…</button><button id="addFmt">${ic('plus')} Add format</button><button id="delBook" class="danger">Delete book</button></div>
+  <p class="mute" style="font-size:12px;margin-top:14px">Stored in: ${esc(b._path.join(' / '))}</p></div>
+  <div class="savebar"><button class="primary" id="saveBtn" style="flex:1">Save changes</button><button id="closeBtn">Close</button></div>`;
+}
+
+/* ================= actions ================= */
+async function saveDetail() {
+  const b = cur(); if (!b) return;
+  const v = id => $('#' + id).value.trim();
+  b.title = v('f_title') || 'Untitled';
+  b.authors = v('f_authors').split(/\s*&\s*/).map(s => s.trim()).filter(Boolean); if (!b.authors.length) b.authors = ['Unknown'];
+  b.series = v('f_series'); b.seriesIndex = v('f_idx');
+  b.genres = splitList(v('f_genres')); b.tags = splitList(v('f_tags'));
+  b.collections = splitList(v('f_coll')); b.status = $('#f_stat').value; if (b.collections.some(c => !colls.includes(c))) { colls = uniq([...colls, ...b.collections]); saveConfig().catch(() => { }); }
+  b.publisher = v('f_pub'); b.language = v('f_lang'); b.pubdate = v('f_date'); b.rating = +$('#f_rate').value; b.comments = $('#f_cm').value.trim(); b.isbn = v('f_isbn').replace(/[-\s]/g, '');
+  b.modified = new Date().toISOString();
+  await saveMeta(b);
+  const moved = await organize([b]);
+  render(); toast(moved ? 'Saved and moved to match your folder layout' : 'Saved');
+}
+async function bulkApply() {
+  const list = [...selected].map(id => books.find(b => b.id === id)).filter(Boolean), v = id => $('#' + id).value.trim();
+  const g = splitList(v('b_genres')), t = splitList(v('b_tags')), s = v('b_series'), a = v('b_authors').split(/\s*&\s*/).map(x => x.trim()).filter(Boolean), p = v('b_pub'), l = v('b_lang');
+  if (!(g.length || t.length || s || a.length || p || l)) return toast('Nothing to apply');
+  busy('Updating…'); const now = new Date().toISOString();
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (g.length) b.genres = uniq([...b.genres, ...g]); if (t.length) b.tags = uniq([...b.tags, ...t]);
+    if (s) b.series = s; if (a.length) b.authors = a; if (p) b.publisher = p; if (l) b.language = l;
+    b.modified = now; await saveMeta(b);
+  }
+  await organize(list); unbusy(); render(); toast(`Updated ${list.length} books`);
+}
+async function bulkTagsToGenres() {
+  const list = [...selected].map(id => books.find(b => b.id === id)).filter(Boolean);
+  busy('Updating…'); for (const b of list) { b.genres = uniq([...b.genres, ...b.tags]); b.tags = []; b.modified = new Date().toISOString(); await saveMeta(b); }
+  await organize(list); unbusy(); render(); toast('Tags copied to genres');
+}
+async function bulkDelete() {
+  const list = [...selected].map(id => books.find(b => b.id === id)).filter(Boolean);
+  if (!confirm(`Delete ${list.length} books and all their files? This cannot be undone.`)) return;
+  for (const b of list) await removeBookFiles(b);
+  selected = new Set(); render(); toast('Deleted');
+}
+async function removeBookFiles(b) {
+  await b._parent.removeEntry(b._name, { recursive: true });
+  await pruneEmpty(root, b._path.slice(0, -1));
+  books = books.filter(x => x !== b);
+}
+const fmtFile = async (b, f) => (await b._dir.getFileHandle(f.file)).getFile();
+async function downloadFormat(b, f) { downloadBlob(await fmtFile(b, f), f.file); }
+async function convertFormat(b, f, target) {
+  const fn = CONVERTERS[`${f.ext}>${target}`]; if (!fn) return;
+  if (b.formats.some(x => x.ext === target) && !confirm(`This book already has a ${target.toUpperCase()} file. Replace it?`)) return;
+  try {
+    busy(`Converting ${f.ext.toUpperCase()} → ${target.toUpperCase()}…`, 0); await tick();
+    const out = await fn(await fmtFile(b, f), b, (m, p) => { busy(m, p); return tick(); });
+    const name = `${sanitize(b.title)} - ${sanitize(b.authors[0])}.${out.ext}`;
+    await writeFile(b._dir, name, out.blob);
+    const rec = { ext: out.ext, file: name, size: out.blob.size };
+    const i = b.formats.findIndex(x => x.ext === out.ext); if (i >= 0) b.formats[i] = rec; else b.formats.push(rec);
+    b.modified = new Date().toISOString(); await saveMeta(b);
+    unbusy(); render(); toast(`Added ${out.ext.toUpperCase()} (${fmtSize(out.blob.size)})`);
+  } catch (e) { unbusy(); console.error(e); alert('Conversion failed: ' + e.message); }
+}
+async function addFormat(file) {
+  const b = cur(); if (!b) return;
+  const ext = extOf(file.name) || 'bin';
+  if (b.formats.some(x => x.ext === ext) && !confirm(`Replace the existing ${ext.toUpperCase()} file?`)) return;
+  const name = `${sanitize(b.title)} - ${sanitize(b.authors[0])}.${ext}`;
+  busy('Saving…'); await writeFile(b._dir, name, file);
+  const rec = { ext, file: name, size: file.size }, i = b.formats.findIndex(x => x.ext === ext);
+  if (i >= 0) b.formats[i] = rec; else b.formats.push(rec);
+  b.modified = new Date().toISOString(); await saveMeta(b); unbusy(); render();
+}
+async function removeFormat(b, i) {
+  const f = b.formats[i]; if (!confirm(`Delete the ${f.ext.toUpperCase()} file?`)) return;
+  await b._dir.removeEntry(f.file); b.formats.splice(i, 1); await saveMeta(b); render();
+}
+async function deleteBook(b) {
+  if (!confirm(`Delete "${b.title}" and all its files? This cannot be undone.`)) return;
+  await removeBookFiles(b); selected = new Set(); render(); toast('Deleted');
+}
+async function setCover(file) {
+  const b = cur(); if (!b) return;
+  const cb = await makeCover(file); if (!cb) return toast('Could not read that image');
+  await writeFile(b._dir, 'cover.jpg', cb); b.hasCover = true;
+  const old = coverCache.get(b.id); if (old) { URL.revokeObjectURL(old); coverCache.delete(b.id); }
+  await saveMeta(b); render();
+}
+
+/* ---- folder organization dialog ---- */
+function layoutDialog() {
+  const sample = { title: 'Dune', authors: ['Frank Herbert'], genres: ['Science Fiction'], series: 'Dune', publisher: 'Chilton Books', pubdate: '1965-08-01', language: 'en', formats: [{ ext: 'epub' }] };
+  const box = modal(`<h3>Folder organization</h3>
+    <p class="mute">Choose how books are filed on disk. Every book gets its own folder named “Title (id)” inside the pattern below.</p>
+    <label class="l">Preset</label><select id="lay_pre">${PRESETS.map(([t, n]) => `<option value="${esc(t)}">${n}</option>`).join('')}<option value="__custom">Custom…</option></select>
+    <label class="l">Pattern — folders separated by “/”. Tokens: ${Object.keys(TOKENS).map(t => `{${t}}`).join(' ')}</label>
+    <input id="lay_tpl" value="${esc(layout.template)}" spellcheck="false">
+    <div id="lay_warn" class="warn"></div>
+    <p>Example: <code id="lay_prev"></code></p>
+    <label class="opt"><input type="checkbox" id="lay_auto"${layout.auto ? ' checked' : ''}> Keep files organised automatically — move a book when I edit its metadata</label>
+    <p><small>A book lives in exactly one place, so it is filed under its <b>first</b> author and <b>first</b> genre (you can still browse by all of them). Moving uses the browser’s move operation when available and otherwise a verified copy.</small></p>
+    <div class="btns"><button id="lay_save" class="primary">Save</button><button id="lay_all">Save &amp; reorganize existing books</button><button id="lay_no">Cancel</button></div>`);
+  const tpl = box.querySelector('#lay_tpl'), pre = box.querySelector('#lay_pre');
+  const sync = () => {
+    const bad = badTokens(tpl.value);
+    box.querySelector('#lay_warn').textContent = bad.length ? 'Unknown token: ' + bad.map(t => `{${t}}`).join(' ') : '';
+    box.querySelector('#lay_save').disabled = box.querySelector('#lay_all').disabled = !!bad.length;
+    box.querySelector('#lay_prev').textContent = [...layoutSegments(sample, tpl.value), 'Dune (a1b2c3d4)'].join(' / ');
+    pre.value = PRESETS.some(p => p[0] === tpl.value) ? tpl.value : '__custom';
+  };
+  pre.onchange = () => { if (pre.value !== '__custom') { tpl.value = pre.value; sync(); } };
+  tpl.oninput = sync; sync();
+  const save = async all => {
+    layout = { template: tpl.value.trim(), auto: box.querySelector('#lay_auto').checked };
+    closeModal();
+    try { await saveConfig(); } catch (e) { alert('Could not save settings: ' + e.message); }
+    if (all) await reorganizeAll(); else toast('Saved');
+    render();
+  };
+  box.querySelector('#lay_save').onclick = () => save(false);
+  box.querySelector('#lay_all').onclick = () => save(true);
+  box.querySelector('#lay_no').onclick = closeModal;
+}
+async function reorganizeAll() {
+  const n = books.filter(needsMove).length;
+  if (!n) return toast('Everything is already organised');
+  if (!confirm(`Move ${n} book folder${n === 1 ? '' : 's'} to match the layout “${layout.template || '(flat)'}”?`)) return;
+  const ok = await organize(books, true); render(); toast(`Moved ${ok} of ${n} books`);
+}
+
+/* ================= backup / restore / export ================= */
+async function backupZip() {
+  let sink, finish;
+  const stamp = new Date().toISOString().slice(0, 10), name = `bookshelf-backup-${stamp}.zip`;
+  if (window.showSaveFilePicker) {
+    const fh = await showSaveFilePicker({ suggestedName: name, types: [{ description: 'ZIP', accept: { 'application/zip': ['.zip'] } }] });
+    const w = await fh.createWritable(); sink = u8 => w.write(u8); finish = () => w.close();
+  } else { const chunks = []; sink = async u8 => { chunks.push(u8); }; finish = async () => downloadBlob(new Blob(chunks, { type: 'application/zip' }), name); }
+  const files = []; busy('Listing files…'); for await (const x of walk(root)) files.push(x);
+  let n = 0;
+  const entries = files.map(x => ({
+    name: x.path, store: !x.path.endsWith('.json'),
+    get: async () => { busy(`Backing up ${++n} of ${files.length}`, n / files.length * 100); await tick(); return new Uint8Array(await (await x.handle.getFile()).arrayBuffer()); }
+  }));
+  try { await writeZip(entries, sink); await finish(); toast('Backup complete'); } catch (e) { alert('Backup failed: ' + e.message + '\n\nFor large libraries use “Backup to another folder” instead.'); } finally { unbusy(); }
+}
+async function backupFolder() {
+  const dest = await showDirectoryPicker({ mode: 'readwrite' });
+  const bad = await sameOrNested(dest); if (bad) return alert(bad);
+  busy('Listing files…'); const files = []; for await (const x of walk(root)) files.push(x);
+  let copied = 0, skipped = 0;
+  for (let i = 0; i < files.length; i++) {
+    busy(`Copying ${i + 1} of ${files.length}`, i / files.length * 100);
+    const parts = files[i].path.split('/'), name = parts.pop(); let d = dest;
+    for (const p of parts) d = await d.getDirectoryHandle(p, { create: true });
+    const src = await files[i].handle.getFile();
+    try { const ex = await (await d.getFileHandle(name)).getFile(); if (ex.size === src.size && !name.endsWith('.json')) { skipped++; continue; } } catch { }
+    await writeFile(d, name, src); copied++;
+    if (i % 5 === 0) await tick();
+  }
+  unbusy(); toast(`Backup done: ${copied} copied, ${skipped} already up to date`, 6000);
+}
+async function restoreZip(file) {
+  if (!confirm('Restore this backup into the current library? Files with the same path will be overwritten.')) return;
+  try {
+    const zip = await openZip(file), names = zip.names();
+    for (let i = 0; i < names.length; i++) {
+      busy(`Restoring ${i + 1} of ${names.length}`, i / names.length * 100);
+      const parts = names[i].split('/').filter(p => p && p !== '.' && p !== '..'), fn = parts.pop(); let d = root;
+      for (const p of parts) d = await d.getDirectoryHandle(p, { create: true });
+      await writeFile(d, fn, await zip.read(names[i]));
+      if (i % 5 === 0) await tick();
+    }
+  } catch (e) { alert('Restore failed: ' + e.message); }
+  unbusy(); await loadConfig(); await scan(); toast('Restore complete');
+}
+function exportCsv() {
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const rows = [['id', 'title', 'authors', 'series', 'series_index', 'genres', 'tags', 'publisher', 'language', 'published', 'isbn', 'rating', 'formats', 'added', 'folder']];
+  for (const b of books) rows.push([b.id, b.title, b.authors.join(' & '), b.series, b.seriesIndex, b.genres.join(', '), b.tags.join(', '), b.publisher, b.language, b.pubdate, b.isbn, b.rating, b.formats.map(f => f.ext).join(' '), b.added, b._path.join('/')]);
+  downloadBlob(new Blob(['﻿' + rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv' }), 'bookshelf-catalog.csv');
+}
+
+/* ================= online metadata & covers (optional, user-initiated) ================= */
+//#FETCH-START
+const FETCH_FIELDS = [
+  { k: 'cover', label: 'Cover' }, { k: 'comments', label: 'Description' }, { k: 'genres', label: 'Genres' },
+  { k: 'authors', label: 'Authors' }, { k: 'publisher', label: 'Publisher' }, { k: 'pubdate', label: 'Published date' },
+  { k: 'series', label: 'Series' }, { k: 'language', label: 'Language' }, { k: 'isbn', label: 'ISBN' }, { k: 'title', label: 'Title' }
+];
+const LANG3 = { eng: 'en', fre: 'fr', fra: 'fr', ger: 'de', deu: 'de', spa: 'es', ita: 'it', por: 'pt', rus: 'ru', jpn: 'ja', chi: 'zh', zho: 'zh', hin: 'hi', ara: 'ar', dut: 'nl', nld: 'nl', lat: 'la', kor: 'ko', swe: 'sv', pol: 'pl', tur: 'tr', heb: 'he', gre: 'el', ell: 'el' };
+const mapLang = c => c ? (LANG3[c] || c) : '';
+const padDate = d => { d = String(d || '').trim(); return /^\d{4}$/.test(d) ? d + '-01-01' : /^\d{4}-\d{2}$/.test(d) ? d + '-01' : /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(0, 10) : ''; };
+const cleanTitle = t => String(t || '').replace(/\(.*?\)|\[.*?\]|\{.*?\}/g, ' ').replace(/[_\-‐-―]+/g, ' ').replace(/\b(z-?library|libgen|epub|mobi|pdf|retail|ebook)\b/ig, ' ').replace(/\s+/g, ' ').trim();
+const SUBJECT_JUNK = /accessible|daisy|in library|large type|reading level|internet archive|overdrive|^nyt:|^lcsh|^(series|place|time|person|collection):|^\d+$/i;
+const cleanSubjects = arr => uniq((arr || []).map(s => String(s).trim()).filter(s => s && s.length <= 40 && !SUBJECT_JUNK.test(s))).slice(0, 6);
+const richText = h => plain(String(h || '').replace(/<\/p>|<br\s*\/?>/gi, '\n')).replace(/[ \t]*\n[ \t]*/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+
+/* --- matching --- */
+const normT = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\(.*?\)|\[.*?\]/g, ' ').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(the|a|an) /, '');
+function bigrams(s) { const a = s.replace(/ /g, ''), m = new Map(); for (let i = 0; i < a.length - 1; i++) { const g = a.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; }
+function dice(a, b) {
+  a = normT(a); b = normT(b); if (!a || !b) return 0; if (a === b) return 1;
+  const A = bigrams(a), B = bigrams(b); let inter = 0, ta = 0, tb = 0;
+  for (const v of A.values()) ta += v; for (const v of B.values()) tb += v;
+  for (const [g, v] of A) if (B.has(g)) inter += Math.min(v, B.get(g));
+  return ta + tb ? 2 * inter / (ta + tb) : 0;
+}
+const mainTitle = t => String(t || '').replace(/_+/g, ' ').split(/[:—–]| - /)[0];
+const titleSim = (a, b) => Math.max(dice(a, b), dice(mainTitle(a), mainTitle(b)));
+const nameTokens = a => { a = String(a); if (a.includes(',')) a = a.split(',').reverse().join(' '); return normT(a).split(' ').filter(Boolean); };
+const lastNames = arr => arr.map(a => { const w = nameTokens(a); return w[w.length - 1] || ''; }).filter(Boolean);
+const baseTitle = t => { const c = cleanTitle(t), x = c.replace(/[\s,]*(?:vol(?:ume)?\.?|v|#|no\.?)\s*\d+.*$/i, '').trim(); return x || c; };
+function scoreCand(b, c) {
+  const mg = c.src === 'AniList' || c.src === 'Kitsu', bt = mg ? baseTitle(b.title) : b.title, mine = b.authors.filter(a => a !== 'Unknown');
+  const ts = Math.max(titleSim(bt, c.title), ...(c.alt || []).map(x => titleSim(bt, x)), mg && b.series ? titleSim(b.series, c.title) : 0);
+  if (!mine.length) return ts * 0.9;
+  if (!c.authors.length) return ts * 0.7 + 0.15;
+  const hit = mine.some(m => { const mt = nameTokens(m), ml = mt[mt.length - 1]; return c.authors.some(t => { const tt = nameTokens(t); return tt.includes(ml) || mt.includes(tt[tt.length - 1]); }); });
+  return ts * 0.7 + (hit ? 0.3 : 0);
+}
+
+/* --- network --- */
+async function netFetch(url, sig, ms = 15000, init = {}) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms), onAbort = () => c.abort();
+  if (sig) sig.addEventListener('abort', onAbort, { once: true });
+  try { return await fetch(url, { ...init, signal: c.signal }); }
+  finally { clearTimeout(t); if (sig) sig.removeEventListener('abort', onAbort); }
+}
+const mkGate = gap => ({ gap, next: 0, off: false, why: '', daily: false, ok: false, netFail: 0 });
+const GATE = { ol: mkGate(1100), gb: mkGate(900), al: mkGate(800), gj: mkGate(1200), wp: mkGate(500), it: mkGate(400), ki: mkGate(600) };
+const SRC_NAME = { ol: 'Open Library', gb: 'Google Books', al: 'AniList', gj: 'Project Gutenberg', wp: 'Wikipedia', it: 'iTunes Books', ki: 'Kitsu' };
+const SRC_PREF = { 'AniList': 0, 'Kitsu': 1, 'Open Library': 1, 'iTunes Books': 2, 'Google Books': 2, 'Project Gutenberg': 3, 'Wikipedia': 4 };
+const SOURCE_INFO = [
+  ['ol', 'good covers and publication data'],
+  ['gb', 'strong descriptions; its free shared quota is often used up, so add a key below'],
+  ['al', 'manga, manhwa and light novels — used for comic files (CBZ/ZIP) and books tagged manga or comic'],
+  ['gj', 'public-domain classics — used when nothing else matches'],
+  ['wp', 'descriptions and covers for well-known books — used to fill gaps'],
+  ['it', 'fast, no key, rarely rate-limited; good covers and descriptions for commercial books and light novels'],
+  ['ki', 'manga and light novels — backup for AniList']
+];
+const sleep = (ms, sig) => new Promise((res, rej) => {
+  const t = setTimeout(res, ms);
+  if (sig) sig.addEventListener('abort', () => { clearTimeout(t); rej(new DOMException('Aborted', 'AbortError')); }, { once: true });
+});
+/* Requests to each service are spaced out; a 429/503 is retried after a delay, and if it persists the service is
+   switched off for the rest of the run so the other one can carry on. */
+async function getJSON(url, sig, src, init) {
+  const g = GATE[src], maxRetry = src === 'gb' && !prefs.gbKey ? 1 : 2;
+  for (let attempt = 0; ; attempt++) {
+    if (g.off) throw Object.assign(new Error(g.why), { rate: true });
+    const wait = Math.max(0, g.next - Date.now()); g.next = Math.max(g.next, Date.now()) + g.gap;
+    if (wait) await sleep(wait, sig);
+    let r;
+    try { r = await netFetch(url, sig, g.ms || 9000, init); }
+    catch (e) {
+      if (e.name === 'AbortError' && !(sig && sig.aborted)) noteTimeout(g, src);
+      if (e instanceof TypeError && !(sig && sig.aborted)) {
+        g.netFail++;
+        if (g.netFail >= 2 && !g.ok) g.off = true, g.why = `${SRC_NAME[src]} can’t be reached from the browser (offline, or blocked by a firewall, VPN or ad-blocker)`;
+      }
+      throw e;
+    }
+    g.ok = true; g.timeouts = 0;
+    if (r.status === 429 || r.status === 503) {
+      let body = ''; try { body = await r.clone().text(); } catch { }
+      if (r.status === 429 && /per day|dailyLimit|daily limit/i.test(body)) {
+        g.off = g.daily = true; g.why = `${SRC_NAME[src]}’ free daily quota is used up — paste a free API key into the Fetch dialog to keep using it`;
+        throw Object.assign(new Error(g.why), { rate: true });
+      }
+      const ra = parseFloat(r.headers.get('retry-after'));
+      if (attempt >= maxRetry) {
+        g.off = true; g.why = `${SRC_NAME[src]} kept answering HTTP ${r.status} (${r.status === 429 ? 'too many requests' : 'temporarily unavailable'})`;
+        throw Object.assign(new Error(g.why), { rate: true });
+      }
+      const delay = Math.min(30000, ra > 0 ? ra * 1000 : 5000 * 2 ** attempt);
+      g.next = Math.max(g.next, Date.now() + delay);
+      const el = document.getElementById('lkMsg'); if (el) el.textContent = `${SRC_NAME[src]} asked us to slow down — waiting ${Math.round(delay / 1000)}s…`;
+      continue;
+    }
+    if (!r.ok) throw new Error(`${SRC_NAME[src]} answered HTTP ${r.status}`);
+    return r.json();
+  }
+}
+/* A service that keeps timing out is switched off for the rest of the run so it can't stall every book */
+function noteTimeout(g, src) {
+  g.timeouts = (g.timeouts || 0) + 1;
+  if (g.timeouts >= (g.ok ? 3 : 2)) { g.off = true; g.why = `${SRC_NAME[src]} is too slow to respond right now`; }
+}
+/* JSONP: no CORS involved, so it works even where fetch() is blocked */
+function jsonp(url, sig, ms) {
+  return new Promise((res, rej) => {
+    const cb = '__jp' + Math.random().toString(36).slice(2), sc = document.createElement('script');
+    let t; const done = (fn, v) => { clearTimeout(t); delete window[cb]; sc.remove(); fn(v); };
+    t = setTimeout(() => done(rej, new DOMException('Timeout', 'AbortError')), ms);
+    if (sig) sig.addEventListener('abort', () => done(rej, new DOMException('Aborted', 'AbortError')), { once: true });
+    window[cb] = d => done(res, d); sc.onerror = () => done(rej, new TypeError('blocked'));
+    sc.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb; document.head.appendChild(sc);
+  });
+}
+async function searchIT(book, sig) {
+  const g = GATE.it; if (g.off) throw Object.assign(new Error(g.why), { rate: true });
+  const t = cleanTitle(book.title), a = book.authors.find(x => x !== 'Unknown');
+  const u = new URL('https://itunes.apple.com/search'), p = u.searchParams;
+  p.set('term', `${t} ${a || ''}`.trim()); p.set('media', 'ebook'); p.set('entity', 'ebook'); p.set('limit', '8');
+  const wait = Math.max(0, g.next - Date.now()); g.next = Math.max(g.next, Date.now()) + g.gap; if (wait) await sleep(wait, sig);
+  let j;
+  try { j = await jsonp(u.href, sig, g.ms || 9000); g.ok = true; g.timeouts = 0; }
+  catch (e) { if (!(sig && sig.aborted)) { if (e.name === 'AbortError') noteTimeout(g, 'it'); else if (++g.netFail >= 2 && !g.ok) { g.off = true; g.why = 'iTunes Books can’t be reached from the browser'; } } throw e; }
+  return ((j && j.results) || []).filter(r => r.trackName).map(r => ({
+    src: 'iTunes Books', byIsbn: false, title: String(r.trackName).trim(), authors: String(r.artistName || '').split(/\s*(?:,|&)\s*/).filter(Boolean),
+    pubdate: padDate(String(r.releaseDate || '').slice(0, 10)), publisher: '', language: '', isbn: '', popularity: 0,
+    genres: cleanSubjects((r.genres || []).filter(x => !/^books$/i.test(x))), description: richText(r.description),
+    coverUrl: String(r.artworkUrl100 || r.artworkUrl60 || '').replace(/\/\d+x\d+(?:bb)?\.(?:jpg|png)$/, '/800x800bb.jpg')
+  }));
+}
+async function searchKI(book, sig) {
+  const u = new URL('https://kitsu.io/api/edge/manga'), p = u.searchParams;
+  p.set('filter[text]', book.series || baseTitle(book.title)); p.set('page[limit]', '6'); p.set('include', 'categories');
+  const j = await getJSON(u.href, sig, 'ki'), cats = new Map((j.included || []).filter(x => x.type === 'categories').map(x => [x.id, x.attributes && x.attributes.title]));
+  return (j.data || []).map(d => {
+    const a = d.attributes || {}, tt = a.titles || {}, titles = uniq([a.canonicalTitle, tt.en, tt.en_jp, tt.en_us, tt.ja_jp].filter(Boolean));
+    const ids = ((d.relationships && d.relationships.categories && d.relationships.categories.data) || []).map(x => cats.get(x.id)).filter(Boolean);
+    const img = a.posterImage || {};
+    return {
+      src: 'Kitsu', byIsbn: false, title: titles[0] || '', alt: titles, series: titles[0] || '', authors: [], pubdate: padDate(a.startDate),
+      publisher: '', language: '', isbn: '', popularity: 0, genres: cleanSubjects(ids), description: richText(a.synopsis),
+      coverUrl: img.large || img.original || ''
+    };
+  }).filter(c => c.title);
+}
+async function searchOL(book, sig) {
+  const fields = 'key,title,author_name,first_publish_year,publisher,language,subject,cover_i,isbn,edition_count';
+  const run = async set => {
+    const u = new URL('https://openlibrary.org/search.json'); set(u.searchParams);
+    u.searchParams.set('limit', '6'); u.searchParams.set('fields', fields);
+    return (await getJSON(u.href, sig, 'ol')).docs || [];
+  };
+  let docs = [], byIsbn = false;
+  if (book.isbn) { docs = await run(p => p.set('isbn', book.isbn)); byIsbn = docs.length > 0; }
+  if (!docs.length) {
+    const t = cleanTitle(book.title), a = book.authors.find(x => x !== 'Unknown');
+    docs = await run(p => { if (a) { p.set('title', t); p.set('author', a); } else p.set('q', t); });
+  }
+  return docs.map(d => ({
+    src: 'Open Library', byIsbn, key: d.key, title: d.title || '', authors: d.author_name || [],
+    pubdate: padDate(d.first_publish_year), publisher: (d.publisher || [])[0] || '', language: mapLang((d.language || [])[0]),
+    genres: cleanSubjects(d.subject), description: '', isbn: (d.isbn || [])[0] || '', popularity: d.edition_count || 0,
+    coverUrl: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg?default=false` : ''
+  }));
+}
+async function olWork(key, sig) {
+  const j = await getJSON('https://openlibrary.org' + key + '.json', sig, 'ol');
+  let d = j.description; if (d && typeof d === 'object') d = d.value;
+  d = String(d || '').split(/\r?\n-{5,}/)[0].trim();
+  return { description: d, subjects: j.subjects || [] };
+}
+async function searchGB(book, sig) {
+  const t = cleanTitle(book.title), a = book.authors.find(x => x !== 'Unknown');
+  const run = async q => {
+    const u = new URL('https://www.googleapis.com/books/v1/volumes');
+    u.searchParams.set('q', q); u.searchParams.set('maxResults', '6'); u.searchParams.set('printType', 'books');
+    if (prefs.gbKey) u.searchParams.set('key', prefs.gbKey);
+    return (await getJSON(u.href, sig, 'gb')).items || [];
+  };
+  let items = [], byIsbn = false;
+  if (book.isbn) { items = await run('isbn:' + book.isbn); byIsbn = items.length > 0; }
+  if (!items.length) items = await run(a ? `intitle:${t} inauthor:${a}` : t);
+  return items.map(it => {
+    const v = it.volumeInfo || {}, ids = v.industryIdentifiers || [], img = v.imageLinks || {};
+    const isbn = (ids.find(x => x.type === 'ISBN_13') || ids[0] || {}).identifier || '';
+    const cu = (img.thumbnail || img.smallThumbnail || '').replace(/^http:/, 'https:').replace('&edge=curl', '').replace(/zoom=\d/, 'zoom=2');
+    const cats = uniq((v.categories || []).flatMap(c => String(c).split('/')).map(s => s.trim()).filter(s => s && !/^general$/i.test(s))).slice(0, 5);
+    return {
+      src: 'Google Books', byIsbn, title: v.title || '', authors: v.authors || [], pubdate: padDate(v.publishedDate),
+      publisher: v.publisher || '', language: v.language || '', genres: cats, description: richText(v.description),
+      isbn, popularity: v.ratingsCount || 0, coverUrl: cu
+    };
+  });
+}
+const AL_QUERY = 'query($s:String){Page(perPage:6){media(search:$s,type:MANGA,sort:SEARCH_MATCH){title{romaji english native} description(asHtml:false) genres startDate{year month day} coverImage{extraLarge large} staff(perPage:5,sort:RELEVANCE){edges{role node{name{full}}}}}}}';
+const AL_INIT = s => ({ method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ query: AL_QUERY, variables: { s } }) });
+async function searchAL(book, sig) {
+  const t = book.series || baseTitle(book.title);
+  const j = await getJSON('https://graphql.anilist.co', sig, 'al', AL_INIT(t));
+  return ((j.data && j.data.Page && j.data.Page.media) || []).map(m => {
+    const titles = [m.title.english, m.title.romaji, m.title.native].filter(Boolean), edges = (m.staff && m.staff.edges) || [];
+    const writers = edges.filter(e => /story|original|author|writer/i.test(e.role || '')).map(e => e.node.name.full);
+    const sd = m.startDate || {}, pad = n => String(n).padStart(2, '0');
+    return {
+      src: 'AniList', byIsbn: false, title: titles[0] || '', alt: titles, series: titles[0] || '',
+      authors: uniq(writers.length ? writers : edges.slice(0, 1).map(e => e.node.name.full)),
+      pubdate: sd.year ? padDate([sd.year, sd.month && pad(sd.month), sd.month && sd.day && pad(sd.day)].filter(Boolean).join('-')) : '',
+      publisher: '', language: '', isbn: '', popularity: 0, genres: (m.genres || []).slice(0, 6),
+      description: richText(String(m.description || '').replace(/~!.*?!~/gs, '')),
+      coverUrl: (m.coverImage && (m.coverImage.extraLarge || m.coverImage.large)) || ''
+    };
+  });
+}
+async function searchGJ(book, sig) {
+  const t = cleanTitle(book.title), a = book.authors.find(x => x !== 'Unknown');
+  const u = new URL('https://gutendex.com/books'); u.searchParams.set('search', a ? `${t} ${a}` : t);
+  const j = await getJSON(u.href, sig, 'gj');
+  return (j.results || []).slice(0, 6).map(d => ({
+    src: 'Project Gutenberg', byIsbn: false, title: d.title || '', authors: (d.authors || []).map(x => x.name),
+    pubdate: '', publisher: '', language: mapLang((d.languages || [])[0]), isbn: '', popularity: d.download_count || 0,
+    genres: cleanSubjects(uniq((d.subjects || []).map(x => String(x).split(' -- ')[0]))),
+    description: String((d.summaries || [])[0] || '').replace(/\s*\(This is an automatically generated summary\.?\)\s*$/i, '').trim(),
+    coverUrl: (d.formats || {})['image/jpeg'] || ''
+  }));
+}
+async function searchWP(book, sig) {
+  const t = cleanTitle(book.title), mine = book.authors.filter(a => a !== 'Unknown'), sur = lastNames(mine);
+  const u = new URL('https://en.wikipedia.org/w/api.php'), p = u.searchParams;
+  p.set('action', 'query'); p.set('format', 'json'); p.set('origin', '*'); p.set('generator', 'search');
+  p.set('gsrsearch', `${t} ${mine[0] || ''} book`.replace(/\s+/g, ' ').trim()); p.set('gsrlimit', '4'); p.set('gsrnamespace', '0');
+  p.set('prop', 'extracts|pageimages'); p.set('exintro', '1'); p.set('explaintext', '1'); p.set('exsentences', '5'); p.set('exlimit', 'max');
+  p.set('piprop', 'thumbnail'); p.set('pithumbsize', '600');
+  const j = await getJSON(u.href, sig, 'wp');
+  return Object.values((j.query && j.query.pages) || {}).sort((x, y) => x.index - y.index).map(pg => {
+    const ex = String(pg.extract || ''), low = ex.toLowerCase();
+    if (!/\b(novel|book|story|stories|comic|manga|poem|series|collection|memoir|play|trilogy|anthology|biography)\b/.test(low.slice(0, 400))) return null;
+    if (sur.length && !sur.some(x => low.includes(x))) return null;
+    return {
+      src: 'Wikipedia', byIsbn: false, title: String(pg.title || '').replace(/\s*\(.*?\)\s*$/, ''), authors: mine, pubdate: '', publisher: '',
+      language: '', isbn: '', popularity: 0, genres: [], description: ex.replace(/\s*\n+\s*/g, '\n').trim(),
+      coverUrl: pg.thumbnail ? pg.thumbnail.source : ''
+    };
+  }).filter(Boolean);
+}
+const SEARCH = { ol: searchOL, gb: searchGB, al: searchAL, gj: searchGJ, wp: searchWP, it: searchIT, ki: searchKI };
+const SRC_ORDER = ['al', 'ol', 'gb', 'gj', 'wp'];
+const COMICISH = b => b.formats.some(f => ['cbz', 'cbr', 'zip'].includes(f.ext)) || /manga|comic|graphic novel|light novel|manhwa|webtoon/i.test([...b.genres, ...b.tags].join(' '));
+/* Which services to ask, given what the earlier ones already returned */
+function wanted(s, book, all, opts) {
+  const good = all.filter(c => c.byIsbn || scoreCand(book, c) >= 0.75);
+  if (s === 'al') return COMICISH(book);
+  if (s === 'ki') return COMICISH(book) && !all.some(c => c.src === 'AniList' && scoreCand(book, c) >= 0.75);
+  if (s === 'gj') return !good.length;
+  if (s === 'wp') return opts.fields.some(f => f === 'cover' || f === 'comments') && !(good.some(c => c.coverUrl) && good.some(c => c.description || c.key));
+  return true;
+}
+async function fetchCover(url, sig) {
+  const r = await netFetch(url, sig, 20000);
+  if (!r.ok) throw new Error('cover HTTP ' + r.status);
+  const b = await r.blob(); if (!/^image\//.test(b.type)) throw new Error('not an image');
+  const bmp = await createImageBitmap(b), ok = bmp.width >= 100 && bmp.height >= 140; bmp.close && bmp.close();
+  if (!ok) throw new Error('placeholder image'); return b;
+}
+
+/* --- per-book lookup --- */
+function computeChanges(b, m, o, coverBlob) {
+  const f = new Set(o.fields), ow = o.overwrite, changes = [], patch = {};
+  const put = (k, label, cur, next, empty, show = v => String(v)) => {
+    if (!f.has(k) || !next || (Array.isArray(next) && !next.length)) return;
+    if (!empty && !ow) return;
+    if (JSON.stringify(cur) === JSON.stringify(next)) return;
+    patch[k] = next; changes.push({ k, label, from: empty ? '' : show(cur), to: show(next) });
+  };
+  const noAuthor = !b.authors.length || (b.authors.length === 1 && b.authors[0] === 'Unknown');
+  put('title', 'Title', b.title, m.title, false);
+  put('authors', 'Authors', b.authors, m.authors, noAuthor, v => v.join(' & '));
+  put('comments', 'Description', b.comments, m.description, !b.comments);
+  put('series', 'Series', b.series, m.series, !b.series);
+  if (f.has('genres') && m.genres.length) {
+    const merged = ow ? uniq([...b.genres, ...m.genres]) : (b.genres.length ? b.genres : m.genres);
+    if (JSON.stringify(merged) !== JSON.stringify(b.genres)) { patch.genres = merged; changes.push({ k: 'genres', label: 'Genres', from: b.genres.join(', '), to: merged.join(', ') }); }
+  }
+  put('publisher', 'Publisher', b.publisher, m.publisher, !b.publisher);
+  if (!(b.pubdate && b.pubdate.slice(0, 4) === (m.pubdate || '').slice(0, 4))) put('pubdate', 'Published', b.pubdate, m.pubdate, !b.pubdate);
+  put('language', 'Language', b.language, m.language, !b.language);
+  put('isbn', 'ISBN', b.isbn || '', m.isbn, !b.isbn);
+  if (coverBlob) changes.push({ k: 'cover', label: 'Cover', from: '', to: 'new cover found' });
+  return { patch, changes };
+}
+async function lookupBook(book0, opts, sig) {
+  /* match on a copy with underscores/hyphens turned into spaces ("Dune_Messiah", "one-piece-vol-1" → normal words); the real book is left untouched */
+  const fold = x => String(x || '').replace(/[_\-‐-―]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const book = { ...book0, title: fold(book0.title), authors: (book0.authors || []).map(a => fold(a) || a), series: fold(book0.series) };
+  const res = { book: book0, status: 'none', changes: [], patch: {}, coverBlob: null, sources: [] };
+  const all = [], errs = [], queried = new Set();
+  /* services are asked at the same time, in two waves (the second only fills gaps), so one slow service can't hold up the rest */
+  const wave = async list => {
+    const todo = list.filter(s => opts.sources.includes(s) && !GATE[s].off && wanted(s, book, all, opts));
+    const out = await Promise.all(todo.map(async s => {
+      queried.add(s);
+      try { return await SEARCH[s](book, sig); }
+      catch (e) {
+        if (sig.aborted) throw e;
+        errs.push(e instanceof TypeError ? new Error('Couldn’t reach the online service (are you offline?)') : e.name === 'AbortError' ? new Error(`${SRC_NAME[s]} didn’t answer in time`) : e);
+        return [];
+      }
+    }));
+    out.forEach(r => all.push(...r));
+  };
+  await wave(['al', 'ol', 'gb', 'it']); await wave(['ki', 'gj', 'wp']);
+  if (!all.length && !errs.length && opts.sources.every(s => !GATE[s] || GATE[s].off)) { res.status = 'error'; res.error = 'Every selected service is rate-limiting requests right now'; return res; }
+  for (const c of all) c.score = c.byIsbn ? 1 : scoreCand(book, c);
+  all.sort((a, b) => b.score - a.score || SRC_PREF[a.src] - SRC_PREF[b.src] || (b.popularity || 0) - (a.popularity || 0));
+  const best = all[0];
+  if (!best || best.score < 0.4) {
+    if (!all.length && errs.length) { res.status = 'error'; res.error = errs[0].message; } else if (best) res.closest = best.title;
+    return res;
+  }
+  const m = { ...best, genres: [...best.genres] }, used = [best];
+  for (const o of all) {
+    if (o === best || o.src === best.src || o.score < 0.75 || o.score < best.score - 0.1) continue;
+    let took = false;
+    for (const k of ['description', 'publisher', 'pubdate', 'language', 'isbn', 'series', 'coverUrl']) if (!m[k] && o[k]) { m[k] = o[k]; took = true; }
+    if (!m.genres.length && o.genres.length) { m.genres = o.genres; took = true; }
+    if (took) used.push(o);
+  }
+  const olc = all.find(c => c.src === 'Open Library' && c.key && c.score >= 0.75);
+  if (olc && (!m.description || !m.genres.length) && opts.fields.some(f => f === 'comments' || f === 'genres')) {
+    try { const w = await olWork(olc.key, sig); if (!m.description) m.description = w.description; if (!m.genres.length) m.genres = cleanSubjects(w.subjects); if (!used.includes(olc)) used.push(olc); } catch (e) { if (sig.aborted) throw e; }
+  }
+  let coverBlob = null;
+  if (opts.fields.includes('cover') && (opts.overwrite || !book.hasCover)) {
+    const urls = uniq([m.coverUrl, ...all.filter(c => c.score >= 0.75).map(c => c.coverUrl), m.isbn ? `https://covers.openlibrary.org/b/isbn/${m.isbn}-L.jpg?default=false` : ''].filter(Boolean)).slice(0, 3);
+    for (const u of urls) { try { coverBlob = await fetchCover(u, sig); break; } catch (e) { if (sig.aborted) throw e; } }
+    /* last resort: Wikipedia, if it wasn't asked yet (e.g. the other services' cover images couldn't be downloaded) */
+    if (!coverBlob && opts.sources.includes('wp') && !queried.has('wp') && !GATE.wp.off) {
+      try {
+        const extra = (await searchWP(book, sig)).filter(c => scoreCand(book, c) >= 0.75);
+        for (const c of extra) {
+          if (!c.coverUrl) continue;
+          try { coverBlob = await fetchCover(c.coverUrl, sig); if (!m.description && c.description) m.description = c.description; used.push(c); break; } catch (e) { if (sig.aborted) throw e; }
+        }
+      } catch (e) { if (sig.aborted) throw e; }
+    }
+  }
+  const { patch, changes } = computeChanges(book0, m, opts, coverBlob);
+  return { ...res, status: 'ok', m, score: best.score, confident: best.score >= 0.85, patch, changes, coverBlob, sources: uniq(used.map(x => x.src)) };
+}
+
+/* --- dialogs & flow --- */
+const PROBES = {
+  ol: { url: 'https://openlibrary.org/search.json?q=dune&limit=1&fields=key' },
+  gb: { url: 'https://www.googleapis.com/books/v1/volumes?q=dune&maxResults=1' },
+  al: { url: 'https://graphql.anilist.co', init: AL_INIT('one piece') },
+  gj: { url: 'https://gutendex.com/books?search=dune' },
+  wp: { url: 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=dune&srlimit=1' },
+  it: { jsonp: 'https://itunes.apple.com/search?term=dune&media=ebook&limit=1' },
+  ki: { url: 'https://kitsu.io/api/edge/manga?filter[text]=one%20piece&page[limit]=1' }
+};
+async function probe(src) {
+  const t = performance.now(), name = SRC_NAME[src], pr = PROBES[src];
+  if (pr.jsonp) { try { await jsonp(pr.jsonp, null, 10000); return { ok: true, text: `${name}: working (${Math.round(performance.now() - t)} ms)` }; } catch (e) { return { ok: false, text: `${name}: no response — blocked or offline` }; } }
+  try {
+    const r = await netFetch(pr.url + (src === 'gb' && prefs.gbKey ? '&key=' + encodeURIComponent(prefs.gbKey) : ''), null, 10000, pr.init || {}), ms = Math.round(performance.now() - t);
+    if (r.ok) return { ok: true, text: `${name}: working (${ms} ms)` };
+    let body = ''; try { body = (await r.text()).replace(/\s+/g, ' ').slice(0, 160); } catch { }
+    const ra = r.headers.get('retry-after');
+    return { ok: false, text: `${name}: HTTP ${r.status}${ra ? ', retry after ' + ra + 's' : ''}${body ? ' — ' + body : ''}` };
+  } catch (e) { return { ok: false, text: `${name}: no response (${e.name}) — you may be offline, or a firewall, VPN or ad-blocker (or the service itself) is blocking browser requests` }; }
+}
+let fetchAbort = null;
+function fetchOptionsDialog(n) {
+  return new Promise(res => {
+    const o = Object.assign({ sources: ['ol', 'gb'], fields: ['cover', 'comments', 'genres', 'authors', 'series', 'publisher', 'pubdate', 'language', 'isbn'], overwrite: false, auto: false }, prefs.fetchOpts || {});
+    if (!o.moreSrc) o.sources = uniq([...o.sources, 'al', 'gj', 'wp']);
+    if (!o.srcV2) o.sources = uniq([...o.sources, 'it', 'ki']);
+    const box = modal(`<h3>Fetch metadata &amp; covers</h3>
+      <p class="mute" style="margin-top:0">Look up ${n} selected book${n === 1 ? '' : 's'} online.</p>
+      <label class="l">Search in</label>
+      ${SOURCE_INFO.map(([k, d]) => `<label class="opt"><input type="checkbox" data-src="${k}"${o.sources.includes(k) ? ' checked' : ''}> ${SRC_NAME[k]} <small>— ${d}</small></label>`).join('')}
+      <label class="l">Update these fields</label>
+      <div class="fgrid">${FETCH_FIELDS.map(f => `<label class="opt"><input type="checkbox" data-f="${f.k}"${o.fields.includes(f.k) ? ' checked' : ''}> ${f.label}</label>`).join('')}</div>
+      <label class="l">When a field already has a value</label>
+      <label class="opt"><input type="radio" name="fmode" value="fill"${o.overwrite ? '' : ' checked'}> Keep it — only fill in what’s missing</label>
+      <label class="opt"><input type="radio" name="fmode" value="over"${o.overwrite ? ' checked' : ''}> Replace it <small>(genres are added to the existing ones)</small></label>
+      <label class="opt" style="margin-top:8px"><input type="checkbox" id="fauto"${o.auto ? ' checked' : ''}> Apply confident matches straight away and only ask me about the uncertain ones</label>
+      <label class="l">Google Books API key <small>— optional; avoids its shared rate limit (free from Google Cloud Console → Books API). Stored only in this browser.</small></label>
+      <input id="fkey" placeholder="AIza…" value="${esc(prefs.gbKey || '')}" autocomplete="off" spellcheck="false">
+      <p><small>This is the only feature that uses the internet, and only when you start it. The title, author and ISBN of the selected books are sent to the services ticked above; nothing else leaves your computer.</small></p>
+      <div class="btns" style="margin:6px 0 0"><button id="fTest">Test connection</button></div><div id="ftest" style="font-size:12.5px;margin:6px 0"></div>
+      <div id="fwarn" class="warn"></div>
+      <div class="btns"><button id="fGo" class="primary">Start lookup</button><button id="fNo">Cancel</button></div>`, '', () => res(null));
+    box.querySelector('#fNo').onclick = () => { res(null); closeModal(); };
+    box.querySelector('#fTest').onclick = async () => {
+      const out = box.querySelector('#ftest'), srcs = [...box.querySelectorAll('[data-src]:checked')].map(x => x.dataset.src);
+      if (!srcs.length) { out.textContent = 'Tick at least one service to test.'; return; }
+      out.textContent = 'Testing…'; box.querySelector('#fTest').disabled = true;
+      const rs = await Promise.all(srcs.map(probe));
+      out.innerHTML = rs.map(r => `<div class="${r.ok ? '' : 'warn'}">${r.ok ? '✓' : '✗'} ${esc(r.text)}</div>`).join('');
+      box.querySelector('#fTest').disabled = false;
+    };
+    box.querySelector('#fGo').onclick = () => {
+      const sources = [...box.querySelectorAll('[data-src]:checked')].map(x => x.dataset.src), fields = [...box.querySelectorAll('[data-f]:checked')].map(x => x.dataset.f);
+      if (!sources.length || !fields.length) { box.querySelector('#fwarn').textContent = 'Pick at least one source and one field.'; return; }
+      prefs.gbKey = box.querySelector('#fkey').value.trim(); savePrefs();
+      res({ sources, fields, moreSrc: true, srcV2: true, overwrite: box.querySelector('input[name=fmode]:checked').value === 'over', auto: box.querySelector('#fauto').checked });
+      closeModal();
+    };
+  });
+}
+async function runLookups(list, opts) {
+  fetchAbort = new AbortController(); const sig = fetchAbort.signal;
+  if (prefs.gbKey) GATE.gb.daily = false;
+  for (const k of Object.keys(GATE)) { const g = GATE[k]; g.next = 0; g.ok = false; g.netFail = 0; g.off = g.daily; if (g.daily) g.why = `${SRC_NAME[k]}’ free daily quota is used up — paste a free API key into the Fetch dialog to keep using it`; else g.why = ''; }
+  const box = modal(`<h3>Looking up ${list.length} book${list.length === 1 ? '' : 's'}…</h3><div class="mute" id="lkMsg" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Starting…</div><div class="pbar"><i id="lkBar"></i></div><div class="btns" style="margin-top:0"><button id="lkCancel">Cancel</button></div>`);
+  const out = new Array(list.length); let done = 0, idx = 0;
+  box.querySelector('#lkCancel').onclick = () => fetchAbort && fetchAbort.abort();
+  const worker = async () => {
+    while (idx < list.length && !sig.aborted) {
+      const i = idx++, b = list[i]; box.querySelector('#lkMsg').textContent = `${done + 1} of ${list.length} · ${b.title}`;
+      try { out[i] = await lookupBook(b, opts, sig); }
+      catch (e) { if (sig.aborted) return; out[i] = { book: b, status: 'error', error: e.message, changes: [], patch: {} }; }
+      done++; box.querySelector('#lkBar').style.width = done / list.length * 100 + '%';
+    }
+  };
+  await Promise.all([worker(), worker()]);
+  const aborted = sig.aborted; fetchAbort = null; closeModal();
+  if (aborted) { toast('Lookup cancelled'); return null; }
+  out.limited = Object.keys(GATE).filter(k => GATE[k].off).map(k => SRC_NAME[k]);
+  out.notes = Object.keys(GATE).filter(k => GATE[k].off).map(k => GATE[k].why);
+  return out;
+}
+const clip = (s, n = 110) => { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+async function reviewDialog(results, notes = []) {
+  await Promise.all(results.map(async r => { r.oldCover = await coverURL(r.book); }));
+  const urls = [], thumb = u => u ? `<img class="th" src="${u}" alt="">` : '<span class="th"></span>';
+  const mkUrl = blob => { const u = URL.createObjectURL(blob); urls.push(u); return u; };
+  const nOk = results.filter(r => r.status === 'ok' && r.changes.length).length;
+  return new Promise(res => {
+    const rows = results.map((r, i) => {
+      const b = r.book, head = `<b>${esc(b.title)}</b> <span class="mute">${esc(b.authors.join(' & '))}</span>`;
+      if (r.status === 'error') return `<div class="rv off"><div></div><div>${head}<div class="match warn">Lookup failed: ${esc(r.error)}</div></div></div>`;
+      if (r.status === 'none') return `<div class="rv off"><div></div><div>${head}<div class="match mute">No match found${r.closest ? ` (closest was “${esc(r.closest)}”)` : ''}. Try fixing the title or author and fetching again.</div></div></div>`;
+      if (!r.changes.length) return `<div class="rv off"><div></div><div>${head}<div class="match mute">Matched “${esc(r.m.title)}” — nothing new to add with your settings.</div></div></div>`;
+      const conf = r.score >= 0.85 ? 'high' : r.score >= 0.65 ? 'medium' : 'low', m = r.m;
+      return `<div class="rv"><label><input type="checkbox" data-i="${i}"${r.confident ? ' checked' : ''}></label>
+        <div class="rvcov">${thumb(r.oldCover)}${r.coverBlob ? `<span class="arr">→</span>${thumb(mkUrl(r.coverBlob))}` : ''}</div>
+        <div>${head}
+          <div class="match"><span class="pill ${conf}">${conf} · ${Math.round(r.score * 100)}%</span>${esc(m.title)} — ${esc(m.authors.join(', ') || 'unknown author')}${m.pubdate ? ' · ' + esc(m.pubdate.slice(0, 4)) : ''} <small>via ${esc(r.sources.join(' + '))}</small></div>
+          <ul class="chg">${r.changes.map(c => c.k === 'cover' ? `<li><b>Cover</b> <span class="new">new cover found</span></li>` : `<li><b>${esc(c.label)}</b> ${c.from ? `<span class="old">${esc(clip(c.from, 70))}</span> → ` : ''}<span class="new">${esc(clip(c.to))}</span></li>`).join('')}</ul></div></div>`;
+    }).join('');
+    const box = modal(`<div class="mh"><h3>Review matches</h3><div class="mute">${nOk} book${nOk === 1 ? '' : 's'} with suggested changes. Confident matches are ticked; check the uncertain ones before applying.</div>${notes.length ? `<div class="warn" style="margin-top:6px">${esc(notes.join(' · '))}. Some matches may be missing.</div>` : ''}</div>
+      <div class="mb">${rows}</div>
+      <div class="mf"><span id="rvCount" class="mute"></span><span class="sp"></span><button id="rvAll" class="ghost">Select all</button><button id="rvNone" class="ghost">None</button><button id="rvNo">Cancel</button><button id="rvGo" class="primary">Apply to selected</button></div>`, 'wide flex', () => { done(null); });
+    const done = v => { res(v); urls.forEach(u => URL.revokeObjectURL(u)); };
+    const boxes = () => [...box.querySelectorAll('input[data-i]')];
+    const count = () => { const n = boxes().filter(x => x.checked).length; box.querySelector('#rvCount').textContent = `${n} selected`; box.querySelector('#rvGo').disabled = !n; };
+    box.addEventListener('change', count); count();
+    box.querySelector('#rvAll').onclick = () => { boxes().forEach(x => x.checked = true); count(); };
+    box.querySelector('#rvNone').onclick = () => { boxes().forEach(x => x.checked = false); count(); };
+    box.querySelector('#rvNo').onclick = () => { done(null); closeModal(); };
+    box.querySelector('#rvGo').onclick = () => { done(boxes().filter(x => x.checked).map(x => results[+x.dataset.i])); closeModal(); };
+  });
+}
+async function applyResults(rs) {
+  let n = 0; const touched = []; busy('Saving…', 0);
+  for (let i = 0; i < rs.length; i++) {
+    const r = rs[i], b = r.book; busy(`Saving ${i + 1} of ${rs.length}…`, i / rs.length * 100); await tick();
+    try {
+      Object.assign(b, r.patch);
+      if (r.coverBlob) {
+        const cb = await makeCover(r.coverBlob);
+        if (cb) { await writeFile(b._dir, 'cover.jpg', cb); b.hasCover = true; const old = coverCache.get(b.id); if (old) { URL.revokeObjectURL(old); coverCache.delete(b.id); } }
+      }
+      b.modified = new Date().toISOString(); await saveMeta(b); touched.push(b); n++;
+    } catch (e) { console.error(e); }
+  }
+  await organize(touched); unbusy(); render(); return n;
+}
+async function startFetch(list) {
+  if (!root) return;
+  list = list || [...selected].map(id => books.find(b => b.id === id)).filter(Boolean);
+  if (!list.length) return toast('Select one or more books first (Ctrl/⌘-click, Shift-click or Ctrl/⌘+A)', 5000);
+  if (navigator.onLine === false && !confirm('You appear to be offline. Try anyway?')) return;
+  const opts = await fetchOptionsDialog(list.length); if (!opts) return;
+  prefs.fetchOpts = opts; savePrefs();
+  const results = await runLookups(list, opts); if (!results) return;
+  const lim = results.limited || [], notes = results.notes || [];
+  if (results.every(r => r.status === 'error')) return alert('Couldn’t look anything up: ' + results[0].error + (notes.length ? '\n\n' + notes.join('\n') + '\n\nWait a minute or two and try again with fewer books.' : ''));
+  let applied = 0, rest = results;
+  if (opts.auto) {
+    const sure = results.filter(r => r.status === 'ok' && r.confident && r.changes.length);
+    if (sure.length) applied += await applyResults(sure);
+    rest = results.filter(r => !sure.includes(r) && (r.status !== 'ok' || (r.changes.length && !r.confident)));
+  }
+  if (rest.length) { const chosen = await reviewDialog(rest, notes); if (chosen && chosen.length) applied += await applyResults(chosen); }
+  toast((applied ? `Updated ${applied} of ${list.length} book${list.length === 1 ? '' : 's'}` : 'No changes were applied') + (lim.length ? ` · ${lim.join(' and ')} ${lim.length > 1 ? 'were' : 'was'} skipped (see the note in the review)` : ''), 8000);
+}
+//#FETCH-END
+
+/* ================= collections, organizing, eReader ================= */
+const smartHTML = () => `<details data-k="smart"${openFacets.has('smart') ? ' open' : ''}><summary>Smart collections (${smart.length})</summary>${smart.map((s, i) => `<div class="it" data-x="smart" data-i="${i}"><span>${esc(s.name)}</span><span><b data-x="smartdel" title="Delete">✕</b></span></div>`).join('')}<div class="it" data-x="savesmart"><span>＋ Save current view…</span><span></span></div></details>`;
+function sideX(e, it) {
+  const x = it.dataset.x, i = +it.dataset.i;
+  if (e.target.dataset.x === 'smartdel') { smart.splice(i, 1); saveConfig().catch(() => { }); return render(); }
+  if (x === 'newcoll') return newCollection();
+  if (x === 'savesmart') return saveSmart();
+  if (x === 'smart') {
+    const s = smart[i]; filters = { ...s.filters }; query = s.query || ''; $('#q').value = query;
+    prefs.sort = s.sort || 'title'; prefs.desc = !!s.desc; prefs.group = s.group || ''; savePrefs(); render();
+  }
+}
+async function saveSmart() {
+  const name = (prompt('Name for this smart collection (it saves the current filters, search, sort and grouping):') || '').trim(); if (!name) return;
+  smart.push({ name, filters: { ...filters }, query, sort: prefs.sort || 'title', desc: !!prefs.desc, group: prefs.group || '' });
+  await saveConfig(); render(); toast('Smart collection saved');
+}
+async function bulkEdit(list, fn, msg) {
+  busy('Updating…'); const now = new Date().toISOString();
+  for (const b of list) { fn(b); b.modified = now; await saveMeta(b); }
+  await organize(list); unbusy(); render(); toast(msg || `Updated ${list.length} book${list.length === 1 ? '' : 's'}`);
+}
+async function addToCollection(list, name) {
+  if (!colls.includes(name)) { colls.push(name); await saveConfig(); }
+  await bulkEdit(list, b => { b.collections = uniq([...b.collections, name]); }, `Added ${list.length} to “${name}”`);
+}
+async function newCollection() {
+  const n = (prompt('New collection name:') || '').trim(); if (!n) return;
+  if (!colls.includes(n)) { colls.push(n); await saveConfig(); }
+  const list = selBooks();
+  if (list.length && confirm(`Add the ${list.length} selected book(s) to “${n}”?`)) return addToCollection(list, n);
+  render();
+}
+function organizeDialog() {
+  const list = selBooks(); if (!list.length) return toast('Select some books first');
+  const names = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp), opts = names.map(n => `<option>${esc(n)}</option>`).join('');
+  const box = modal(`<h3>Organize ${list.length} book${list.length === 1 ? '' : 's'}</h3>
+    <label class="l">Add to collection</label><input id="o_add" list="o_dl" placeholder="Pick one or type a new name"><datalist id="o_dl">${opts}</datalist>
+    <label class="l">Remove from collection</label><select id="o_rm"><option value="">—</option>${opts}</select>
+    <label class="l">Reading status</label><select id="o_st"><option value="">Leave unchanged</option>${Object.entries(STAT_LABEL).map(([k, v]) => `<option value="${k || 'none'}">${v}</option>`).join('')}</select>
+    <label class="l">Rating</label><select id="o_rate"><option value="">Leave unchanged</option>${[0, 1, 2, 3, 4, 5].map(n => `<option value="${n}">${n ? '★'.repeat(n) : 'No rating'}</option>`).join('')}</select>
+    <label class="l">Remove a tag or genre (exact name)</label><input id="o_del" placeholder="e.g. to-read">
+    <div class="btns"><button class="primary" id="o_go">Apply</button><button id="o_no">Cancel</button></div>`);
+  box.querySelector('#o_no').onclick = closeModal;
+  box.querySelector('#o_go').onclick = async () => {
+    const add = box.querySelector('#o_add').value.trim(), rm = box.querySelector('#o_rm').value, st = box.querySelector('#o_st').value, rt = box.querySelector('#o_rate').value, del = box.querySelector('#o_del').value.trim().toLowerCase();
+    if (!(add || rm || st || rt !== '' || del)) return toast('Nothing to apply');
+    closeModal();
+    if (add && !colls.includes(add)) { colls.push(add); await saveConfig(); }
+    await bulkEdit(list, b => {
+      if (add) b.collections = uniq([...b.collections, add]);
+      if (rm) b.collections = b.collections.filter(c => c !== rm);
+      if (st) b.status = st === 'none' ? '' : st;
+      if (rt !== '') b.rating = +rt;
+      if (del) { b.tags = b.tags.filter(t => t.toLowerCase() !== del); b.genres = b.genres.filter(t => t.toLowerCase() !== del); }
+    });
+  };
+}
+async function renameValue(field, from, to) {
+  to = to.trim(); const isArr = ['authors', 'genres', 'tags', 'collections'].includes(field);
+  const hit = books.filter(b => isArr ? b[field].includes(from) : b[field] === from);
+  busy('Updating…'); const now = new Date().toISOString();
+  for (const b of hit) {
+    if (isArr) { b[field] = uniq(b[field].map(v => v === from ? to : v).filter(Boolean)); if (field === 'authors' && !b.authors.length) b.authors = ['Unknown']; } else b[field] = to;
+    b.modified = now; await saveMeta(b);
+  }
+  if (field === 'collections') { colls = uniq(colls.map(c => c === from ? to : c).filter(Boolean)); await saveConfig(); }
+  await organize(hit); unbusy(); render(); toast(`Updated ${hit.length} book${hit.length === 1 ? '' : 's'}`);
+}
+function collsDialog() {
+  const names = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp), cnt = n => books.filter(b => b.collections.includes(n)).length;
+  const box = modal(`<h3>Collections</h3><p class="mute">A book can belong to several collections. Collections don’t move files unless you use {collection} in your folder pattern.</p>
+    ${names.map((n, i) => `<div class="fmt"><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(n)}</b><span class="sz" style="flex:none">${cnt(n)}</span><button data-r="${i}">Rename</button><button data-d="${i}" class="danger">Delete</button></div>`).join('') || '<p class="mute">No collections yet.</p>'}
+    <div class="btns"><button id="c_new" class="primary">＋ New collection</button><button id="c_close">Close</button></div>`);
+  box.onclick = async e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.id === 'c_close') return closeModal();
+    if (t.id === 'c_new') { closeModal(); return newCollection(); }
+    if (t.dataset.r != null) { const o = names[+t.dataset.r], n = (prompt('Rename collection', o) || '').trim(); if (n && n !== o) await renameValue('collections', o, n); closeModal(); collsDialog(); }
+    if (t.dataset.d != null) { const o = names[+t.dataset.d]; if (confirm(`Delete the collection “${o}”? The books stay in your library.`)) await renameValue('collections', o, ''); closeModal(); collsDialog(); }
+  };
+}
+function renameDialog() {
+  const F = { authors: 'Author', series: 'Series', genres: 'Genre', tags: 'Tag', publisher: 'Publisher', collections: 'Collection' };
+  const vals = k => [...new Set(books.flatMap(b => facetOf(k).get(b)))].sort(natCmp);
+  const box = modal(`<h3>Rename or merge</h3><p class="mute">Change a value on every book that has it. Renaming to a name that already exists merges the two.</p>
+    <label class="l">Field</label><select id="r_f">${Object.entries(F).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+    <label class="l">Value</label><select id="r_v"></select><label class="l">New name</label><input id="r_n">
+    <div class="btns"><button class="primary" id="r_go">Apply</button><button id="r_no">Cancel</button></div>`);
+  const f = box.querySelector('#r_f'), v = box.querySelector('#r_v'), n = box.querySelector('#r_n');
+  const fill = () => { v.innerHTML = vals(f.value).map(x => `<option>${esc(x)}</option>`).join(''); n.value = v.value || ''; };
+  f.onchange = fill; v.onchange = () => { n.value = v.value; }; fill();
+  box.querySelector('#r_no').onclick = closeModal;
+  box.querySelector('#r_go').onclick = async () => {
+    const nv = n.value.trim(); if (!v.value || !nv || nv === v.value) return toast('Pick a value and a different new name');
+    closeModal(); await renameValue(f.value, v.value, nv);
+  };
+}
+function dupDialog() {
+  const m = new Map(); for (const b of books) { const k = dupKey(b.title, b.authors); if (!m.has(k)) m.set(k, []); m.get(k).push(b); }
+  const groups = [...m.values()].filter(g => g.length > 1);
+  if (!groups.length) return toast('No duplicates found (same title and first author)');
+  const box = modal(`<h3>${groups.length} possible duplicate${groups.length === 1 ? '' : 's'}</h3><p class="mute">Same title and first author. “Select extras” selects every copy except the oldest, so you can review and delete them.</p>
+    ${groups.map(g => `<div class="fmt"><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(g[0].title)}</b><span class="sz" style="flex:none">${esc(g[0].authors[0])} · ×${g.length}</span></div>`).join('')}
+    <div class="btns"><button id="d_sel" class="primary">Select extras</button><button id="d_no">Close</button></div>`);
+  box.querySelector('#d_no').onclick = closeModal;
+  box.querySelector('#d_sel').onclick = () => {
+    selected = new Set(groups.flatMap(g => [...g].sort((a, b) => a.added.localeCompare(b.added)).slice(1).map(b => b.id)));
+    closeModal(); filters = {}; query = ''; $('#q').value = ''; render(); toast(`${selected.size} selected`);
+  };
+}
+
+/* ---- send to eReader (Xteink / CrossPoint) ---- */
+const nap = ms => new Promise(r => setTimeout(r, ms));
+const READER_FMT = { auto: ['epub', 'xtch', 'xtc', 'txt'], xtc: ['xtch', 'xtc', 'epub', 'txt'] };
+const devHost = d => d.host.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+const httpHost = d => d.type !== 'http' ? devHost(d).replace(/:\d+$/, '') : devHost(d);
+function pickFiles(b, d) {
+  if (d.fmt === 'all') return b.formats.filter(f => READER_FMT.auto.includes(f.ext));
+  for (const e of READER_FMT[d.fmt] || READER_FMT.auto) { const f = b.formats.find(x => x.ext === e); if (f) return [f]; }
+  return [];
+}
+function wsUpload(d, name, blob, path, onProg) {
+  return new Promise((res, rej) => {
+    let ws, done = false, timer, started = false;
+    const fail = m => { if (done) return; done = true; clearTimeout(timer); try { ws.close(); } catch { } rej(new Error(m)); };
+    const arm = () => { clearTimeout(timer); timer = setTimeout(() => fail('Timed out connecting — is the reader on its Wi-Fi transfer screen?'), 15000); };
+    try { ws = new WebSocket(`ws://${httpHost(d)}:${d.port || 81}/`); } catch (e) { return rej(new Error('Could not connect: ' + e.message)); }
+    arm();
+    ws.onopen = () => { arm(); ws.send(`START:${name}:${blob.size}:${path}`); };
+    ws.onerror = () => fail('Could not connect to the reader (check address, Wi-Fi mode and that the page isn’t served over HTTPS)');
+    ws.onclose = () => fail('Connection closed before the upload finished');
+    ws.onmessage = async e => {
+      if (typeof e.data !== 'string') return; arm();
+      if (e.data === 'READY' && !started) {
+        started = true;
+        try { for (let o = 0; o < blob.size; o += 32768) { ws.send(await blob.slice(o, o + 32768).arrayBuffer()); while (ws.bufferedAmount > 262144) await nap(20); } } catch (x) { fail(x.message); }
+      } else if (e.data.startsWith('PROGRESS:')) { const p = e.data.split(':'); onProg && onProg(+p[1] / +p[2]); }
+      else if (e.data === 'DONE') { done = true; clearTimeout(timer); ws.close(); res(); }
+      else if (e.data.startsWith('ERROR')) fail(e.data);
+    };
+  });
+}
+/* Form POST into a hidden iframe: browsers don't apply CORS / fetch restrictions to this, so it reaches the reader where fetch() can't */
+function formSubmit(action, fields, file, maxMs = 4000) {
+  return new Promise(res => {
+    const id = 'up' + Math.random().toString(36).slice(2), fr = document.createElement('iframe'), f = document.createElement('form');
+    fr.name = id; f.method = 'POST'; f.target = id; f.action = action; fr.style.display = f.style.display = 'none';
+    if (file) {
+      f.enctype = 'multipart/form-data'; const inp = document.createElement('input'); inp.type = 'file'; inp.name = 'file';
+      const dt = new DataTransfer(); dt.items.add(new File([file.blob], file.name, { type: file.blob.type || 'application/octet-stream' })); inp.files = dt.files; f.appendChild(inp);
+    }
+    for (const [k, v] of Object.entries(fields || {})) { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i); }
+    document.body.append(fr, f);
+    const t0 = Date.now(); let done = false, to;
+    const fin = () => { if (done) return; done = true; clearTimeout(to); setTimeout(() => { fr.remove(); f.remove(); res(); }, 150); };
+    to = setTimeout(fin, maxMs); fr.addEventListener('load', () => { if (Date.now() - t0 > 80) fin(); });
+    f.submit();
+  });
+}
+const formUpload = (d, name, blob, path) => formSubmit(`http://${httpHost(d)}/upload?path=${encodeURIComponent(path)}`, null, { name, blob }, 60000 + blob.size / 40);
+async function httpUpload(d, name, blob, path) {
+  const fd = new FormData(); fd.append('file', blob, name);
+  await fetch(`http://${httpHost(d)}/upload?path=${encodeURIComponent(path)}`, { method: 'POST', body: fd, mode: 'no-cors' });
+  await nap(300);
+}
+async function mkdirs(d, path, seen) {
+  let parent = '';
+  for (const seg of path.split('/').filter(Boolean)) {
+    const full = parent + '/' + seg;
+    if (!seen.has(full)) {
+      seen.add(full);
+      try {
+        if (location.protocol === 'https:') await fetch(`http://${httpHost(d)}/mkdir`, { method: 'POST', mode: 'no-cors', targetAddressSpace: 'local', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `name=${encodeURIComponent(seg)}&path=${encodeURIComponent(parent || '/')}` });
+        else await formSubmit(`http://${httpHost(d)}/mkdir`, { name: seg, path: parent || '/' }, null, 4000);
+      } catch { }
+    }
+    parent = full;
+  }
+}
+/* Resolve what to send for a book: existing reader-ready files, else an on-the-fly CBZ→EPUB conversion */
+async function jobsFor(b, d, ui) {
+  const files = pickFiles(b, d);
+  if (files.length) return files.map(f => ({ name: f.file, get: () => fmtFile(b, f) }));
+  const src = d.convert && b.formats.find(x => CONVERTERS[`${x.ext}>epub`]); if (!src) return [];
+  const out = await CONVERTERS[`${src.ext}>epub`](await fmtFile(b, src), b, (m, p) => { ui.msg(m); return tick(); });
+  return [{ name: `${sanitize(b.title)} - ${sanitize(b.authors[0])}.${out.ext}`, get: async () => out.blob }];
+}
+async function sendBooks(list, d, ui) {
+  d._http = false; const seen = new Set(); let ok = 0; const skip = [], fail = [], exists = [];
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i]; ui.msg(`(${i + 1}/${list.length}) ${b.title}`);
+    try {
+      const jobs = await jobsFor(b, d, ui); if (!jobs.length) { skip.push(b.title); continue; }
+      const path = '/' + layoutSegments(b, d.path).join('/');
+      await mkdirs(d, path, seen);
+      for (const j of jobs) {
+        const blob = await j.get();
+        if (d.type === 'http') await httpUpload(d, j.name, blob, path);
+        else if (d.type === 'form' || d._http) await formUpload(d, j.name, blob, path);
+        else {
+          try { await wsUpload(d, j.name, blob, path, p => ui.bar((i + p) / list.length * 100)); }
+          catch (e) { if (d.type === 'auto' && /connect|Timed out|closed/i.test(e.message)) { d._http = true; ui.msg('WebSocket unavailable — using browser form upload instead…'); await formUpload(d, j.name, blob, path); } else throw e; }
+        }
+        ok++;
+      }
+    } catch (e) { if (/already exists/i.test(e.message)) { exists.push(b.title); continue; } fail.push(`${b.title}: ${e.message}`); if (/connect|Timed out/i.test(e.message)) break; }
+    ui.bar((i + 1) / list.length * 100);
+  }
+  return { ok, skip, fail, exists };
+}
+/* reader address as typed or pasted (Http://…, trailing paths, spaces) → bare host */
+const normHost = v => String(v || '').trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/[\/?#].*$/, '').trim() || 'crosspoint.local';
+/* ---- Wi-Fi doctor: runs the same steps the reader's own page uses and reports exactly which one fails ---- */
+async function httpProbe(host, ms = 6000) {
+  const c = new AbortController(), t0 = Date.now(), to = setTimeout(() => c.abort(), ms);
+  try { await fetch(`http://${host}/`, { mode: 'no-cors', signal: c.signal, cache: 'no-store', targetAddressSpace: 'local' }); return { ok: true, ms: Date.now() - t0 }; }
+  catch (e) { return { ok: false, ms: Date.now() - t0, err: e.name === 'AbortError' ? `no answer within ${Math.round(ms / 1000)} s` : e.message }; }
+  finally { clearTimeout(to); }
+}
+function wsProbe(host, port, ms = 15000) {
+  return new Promise(res => {
+    const log = [], t0 = Date.now(), tick = m => log.push(`${Date.now() - t0} ms  ${m}`); let ws, done = false, to;
+    const end = ok => { if (done) return; done = true; clearTimeout(to); try { ws.close(); } catch { } res({ ok, log }); };
+    to = setTimeout(() => { tick('no answer (timeout)'); end(false); }, ms);
+    try { ws = new WebSocket(`ws://${host}:${port}/`); } catch (e) { tick('could not start: ' + e.message); return end(false); }
+    ws.onopen = () => { tick('connected → sending START'); ws.send('START:xteink-test.txt:11:/'); };
+    ws.onmessage = e => { const m = typeof e.data === 'string' ? e.data : '[binary]'; tick('reader says: ' + m.slice(0, 80)); if (m === 'READY') ws.send(new TextEncoder().encode('xteink-test')); else if (m === 'DONE' || /already exists/i.test(m)) end(true); else if (m.startsWith('ERROR')) end(false); };
+    ws.onerror = () => tick('connection error'); ws.onclose = e => { tick(`closed (code ${e.code})`); end(false); };
+  });
+}
+async function permState() {
+  const out = [];
+  for (const n of ['local-network-access', 'local-network', 'loopback-network']) { try { const r = await navigator.permissions.query({ name: n }); out.push(`${n}: ${r.state}`); } catch { } }
+  return out.join(', ') || 'not reported by this browser';
+}
+async function wifiDoctor(host, port) {
+  const env = `${location.protocol}//${location.host || '(saved file)'} · secure context ${window.isSecureContext} · ${/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/.test(navigator.userAgent) ? 'iOS' : 'desktop'} · Chrome ${(navigator.userAgent.match(/Chrome\/(\d+)/) || [, '?'])[1]}`;
+  const perm = await permState();
+  const h = await httpProbe(host, 45000);   /* long wait: Chrome may be showing a permission prompt */
+  const w = h.ok ? await wsProbe(host, port) : { ok: false, log: ['(skipped — the reader’s web server was not reachable)'] };
+  const f = h.ok ? await filesProbe(host) : null;
+  const waited = !h.ok && /no answer/.test(h.err || '');
+  let verdict;
+  if (!h.ok && !w.ok && location.protocol === 'content:') verdict = 'BLOCKED BY THE BROWSER: this page was opened from Android’s Downloads (content://), and Chrome refuses to let such pages reach devices on your Wi-Fi. Open it from an https address instead (GitHub Pages works) and press Diagnose again.';
+  else if (h.ok && w.ok) verdict = 'WORKS: this page can reach the reader and upload to it. A file named xteink-test.txt is now in the reader’s root folder (delete it later). Now use Send over Wi-Fi.';
+  else if (h.ok) verdict = 'The reader’s web server answers, but the fast WebSocket upload channel does not. Likely stock firmware or a different port. Set the correct port, or upload by hand with Pop out / Prepare files.';
+  else if (waited) verdict = 'NO ANSWER even after waiting 45 s. Most likely causes: (1) Chrome’s “connect to devices on your local network” prompt was dismissed or denied — tap the lock/settings icon next to the page address › Permissions (or Site settings) › Local network access › Allow, then reload and try again; (2) this phone is not on the same Wi-Fi as the reader, or is using mobile data because that Wi-Fi has no internet — turn mobile data off; (3) the address is wrong — open http://' + host + ' in a normal tab to confirm it shows the reader.';
+  else verdict = 'This page cannot reach the reader (the browser refused instantly). Check Chrome’s Local network access permission for this page (lock icon › Permissions), a VPN / private DNS, or try the reader’s IP address.';
+  return { verdict, text: `${verdict}\n\nPage: ${env}\nPermission: ${perm}\nTarget: ${host} (WebSocket port ${port})\n\n1. Reader web server (HTTP): ${h.ok ? `answered in ${h.ms} ms` : `FAILED — ${h.err} (${h.ms} ms)`}\n2. Upload channel (WebSocket + tiny test upload):\n   ${w.log.join('\n   ') || '(no events)'}\n\n3. Reader file list (needed for Reader files): ${f ? (f.ok ? `readable (${f.n} items in the top folder)` : `not readable from this page — ${f.err}`) : '(skipped)'}` };
+}
+async function filesProbe(host) {
+  try { const r = await fetch(`http://${host}/api/files?path=/`, { cache: 'no-store', targetAddressSpace: 'local' }); const j = await r.json(); return { ok: Array.isArray(j), n: Array.isArray(j) ? j.length : 0 }; }
+  catch (e) { return { ok: false, err: e.message }; }
+}
+/* ---- Reader files: browse, create folders and delete on the reader (CrossPoint web API) ---- */
+function readerFilesDialog(host0) {
+  const d = prefs.dev || {}; let host = normHost(host0 || d.host), cwd = '/', items = [];
+  const hs = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : n + ' B', join = (p, n) => (p === '/' ? '' : p) + '/' + n;
+  const box = modal(`<h3>Reader files</h3>
+    <div class="xrow"><input id="r_host" value="${esc(host)}" spellcheck="false"><button id="r_go" class="primary">Connect</button></div>
+    <div id="r_path" class="mute" style="margin:8px 0;word-break:break-all"></div><div class="xlist" id="r_list" style="max-height:48vh"></div><div id="r_msg" style="min-height:1.4em;margin-top:6px"></div>
+    <div class="btns"><button id="r_up">↑ Up</button><button id="r_mk">＋ New folder</button><button id="r_rf">Refresh</button><button id="r_no">Close</button></div>`);
+  const q = s => box.querySelector(s), msg = t => { q('#r_msg').textContent = t; };
+  const post = async (url, fields) => { await fetch(`http://${host}${url}`, { method: 'POST', mode: 'no-cors', targetAddressSpace: 'local', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(fields).toString() }); await nap(200); };
+  const list = async p => { const r = await fetch(`http://${host}/api/files?path=${encodeURIComponent(p)}`, { cache: 'no-store', targetAddressSpace: 'local' }); if (!r.ok) throw new Error('reader answered ' + r.status); const j = await r.json(); if (!Array.isArray(j)) throw new Error('unexpected reply'); return j; };
+  const rmTree = async p => { for (const c of await list(p)) { if (c.isDirectory) await rmTree(join(p, c.name)); else await post('/delete', { path: join(p, c.name), type: 'file' }); } await post('/delete', { path: p, type: 'folder' }); };
+  const draw = () => {
+    q('#r_list').innerHTML = items.map((it, i) => `<div data-i="${i}" style="display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line,#8883)"><span data-open style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:${it.isDirectory ? 'pointer' : 'default'}">${it.isDirectory ? '▸ ' : ''}${esc(it.name)}</span><small class="mute">${it.isDirectory ? '' : hs(it.size || 0)}</small><button data-del style="padding:2px 8px;min-height:0">Delete</button></div>`).join('');
+  };
+  const load = async () => {
+    q('#r_path').textContent = cwd; msg('Loading…');
+    try { items = (await list(cwd)).sort((a, b) => (b.isDirectory - a.isDirectory) || natCmp(a.name, b.name)); draw(); msg(items.length ? '' : 'This folder is empty.'); }
+    catch (e) {
+      items = []; draw();
+      q('#r_msg').innerHTML = `<span class="warn">Couldn’t read the reader’s file list from this page (${esc(e.message)}). The reader’s firmware probably doesn’t let other pages read it (a browser security rule). Sending books still works.</span> <button type="button" id="r_pop" style="padding:2px 8px;font-size:12px;min-height:0">Open the reader’s own file page ↗</button>`;
+      q('#r_pop').onclick = () => window.open(`http://${host}/files`, 'reader', 'popup,width=520,height=780');
+    }
+  };
+  q('#r_go').onclick = () => { host = normHost(q('#r_host').value); q('#r_host').value = host; prefs.dev = { ...(prefs.dev || {}), host }; savePrefs(); cwd = '/'; load(); };
+  q('#r_rf').onclick = load; q('#r_no').onclick = closeModal;
+  q('#r_up').onclick = () => { cwd = cwd.replace(/\/[^/]*$/, '') || '/'; load(); };
+  q('#r_mk').onclick = async () => { const n = (prompt('New folder name:') || '').trim().replace(/[\\/]/g, ''); if (!n) return; msg('Creating…'); try { await post('/mkdir', { name: n, path: cwd }); } catch (e) { msg(e.message); return; } load(); };
+  q('#r_list').onclick = async e => {
+    const row = e.target.closest('[data-i]'); if (!row) return; const it = items[+row.dataset.i], path = join(cwd, it.name);
+    if (e.target.closest('[data-del]')) {
+      if (!confirm(it.isDirectory ? `Delete the folder “${it.name}” and everything inside it from the reader?` : `Delete “${it.name}” from the reader?`)) return;
+      msg('Deleting…'); try { if (it.isDirectory) await rmTree(path); else await post('/delete', { path, type: 'file' }); } catch (x) { msg(x.message); }
+      load();
+    } else if (it.isDirectory && e.target.closest('[data-open]')) { cwd = path; load(); }
+  };
+  load();
+}
+/* ---- Send to eReader: pick books, stage them in one folder, and use the reader's own page without leaving the library ---- */
+function sendDialog(list) {
+  const d = Object.assign({ type: 'auto', host: 'crosspoint.local', port: 81, path: '/Books', fmt: 'auto', convert: true }, prefs.dev);
+  const sel = new Set(list.map(b => b.id)), sorted = [...books].sort(titleCmp), STAGE = 'Send to reader';
+  let embedded = false; try { embedded = window.top !== window; } catch { embedded = true; }
+  const envWarn = (location.protocol === 'content:' ? '<p class="warn">This page was opened from Android’s Downloads (<b>content://</b>). Chrome blocks pages opened that way from reaching devices on your Wi-Fi — that is why Wi-Fi sending fails. Run <b>Diagnose Wi-Fi</b> for the fix steps.</p>' : '') +
+    (location.protocol === 'https:' ? '<p class="mute" style="font-size:12px">Chrome will ask permission to connect to devices on your local network when you press Diagnose or send — choose <b>Allow</b>. The reader page can’t be shown inside this page; use Pop out.</p>' : '') +
+    (embedded ? '<p class="warn">This library is running inside another page or app viewer, which normally blocks pop-ups and the reader page.</p>' : '');
+  const box = modal(`<h3>Send to eReader</h3>${envWarn}
+    <div class="xf"><div>
+      <input id="x_q" placeholder="Search your library…" spellcheck="false"><div class="xlist" id="x_list"></div><div class="mute" id="x_cnt"></div>
+      <label class="l">File to send</label><select id="x_fmt"><option value="auto">EPUB first, else XTCH/XTC, else TXT</option><option value="xtc">XTCH/XTC first, else EPUB, else TXT</option><option value="all">Every reader-ready format</option></select>
+      <label class="opt"><input type="checkbox" id="x_cv"${d.convert ? ' checked' : ''}> No EPUB/XTC? Convert CBZ → EPUB (not saved to the library)</label>
+      <label class="l">Folder on the reader (Wi-Fi) — {author}, {series} work</label><input id="x_path" value="${esc(d.path)}" spellcheck="false">
+      <label class="l">Or copy straight to an SD card or folder</label><select id="x_lay"><option value="">All files in the chosen folder</option><option value="{author}">Folder per author</option><option value="{author}/{series}">Author / Series folders</option></select>
+      <div class="btns"><button class="primary" id="x_wifi">Send over Wi-Fi</button><button id="x_sd">Copy to SD card / folder…</button><button id="x_stage">Prepare files for upload</button><button id="x_dl">Download instead</button></div><div id="x_res" style="min-height:1.4em"></div><pre id="x_rep" style="white-space:pre-wrap;font-size:11px;user-select:text;margin:6px 0 0"></pre>
+    </div><div>
+      <label class="l" style="margin-top:0">2. Reader page — use the IP shown on the reader if the name doesn’t work</label>
+      <div class="xrow"><input id="x_host" value="${esc(d.host)}" spellcheck="false"><button id="x_go" class="primary">Open</button><button id="x_pop">Pop out ↗</button></div>
+      <iframe class="xfr" id="x_fr" title="Reader page"></iframe>
+      <p class="mute" style="font-size:12px" id="x_note">On the reader, open File Transfer first. In the page above choose Upload, then in the file picker open <b>${esc(root ? root.name : 'your library')} › ${STAGE}</b> and select all files. If the pane stays blank, your browser or the reader won’t show it inside another page — use Pop out.</p>
+    </div></div>
+    <div class="btns"><button id="x_diag" class="primary">Diagnose Wi-Fi</button><button id="x_files">Reader files…</button><button id="x_direct">Direct send (experimental)…</button><button id="x_no">Close</button></div>`, '', () => { box.style.width = box.style.maxWidth = ''; });
+  box.style.width = box.style.maxWidth = 'min(1100px,96vw)';
+  const q = s => box.querySelector(s), res = q('#x_res'); q('#x_fmt').value = d.fmt;
+  const draw = () => {
+    const f = q('#x_q').value.trim().toLowerCase();
+    q('#x_list').innerHTML = sorted.filter(b => !f || (b.title + ' ' + b.authors.join(' ')).toLowerCase().includes(f)).slice(0, 400).map(b =>
+      `<label><input type="checkbox" data-id="${b.id}"${sel.has(b.id) ? ' checked' : ''}><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.title)} <small class="mute">${esc(b.authors[0] || '')}</small></span><small class="mute">${esc(b.formats.map(x => x.ext).join(' '))}</small></label>`).join('') || '<p class="mute" style="padding:8px">No books match.</p>';
+    q('#x_cnt').textContent = `${sel.size} selected`;
+  };
+  q('#x_q').oninput = draw; draw();
+  q('#x_list').onchange = e => { const c = e.target.closest('[data-id]'); if (!c) return; c.checked ? sel.add(c.dataset.id) : sel.delete(c.dataset.id); q('#x_cnt').textContent = `${sel.size} selected`; };
+  const url = () => 'http://' + (q('#x_host').value.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '') || 'crosspoint.local') + '/';
+  const save = () => { Object.assign(d, { path: q('#x_path').value.trim() || '/', host: normHost(q('#x_host').value), fmt: q('#x_fmt').value, convert: q('#x_cv').checked }); q('#x_host').value = d.host; prefs.dev = { ...d }; savePrefs(); };
+  q('#x_go').onclick = () => {
+    save();
+    if (location.protocol === 'https:') { q('#x_note').innerHTML = '<span class="warn">This page is served over HTTPS, so the browser won’t load the reader (http) inside it. Use Pop out, or open the saved library file from disk.</span>'; return; }
+    q('#x_fr').src = url();
+  };
+  q('#x_pop').onclick = () => {
+    save(); let w = null; try { w = window.open(url(), 'reader', 'popup,width=520,height=780'); } catch { }
+    if (!w) q('#x_note').innerHTML = `<span class="warn">The pop-up was blocked or can’t open here.</span> Open <b>${esc(url())}</b> in a normal browser tab yourself (type it in the address bar) — your prepared files are already waiting in the “${STAGE}” folder. <button type="button" id="x_cp" style="padding:2px 8px;font-size:12px;min-height:0">Copy address</button>`;
+  };
+  q('#x_note').onclick = e => { if (e.target.id === 'x_cp') { try { navigator.clipboard.writeText(url()); toast('Address copied'); } catch { toast(url()); } } };
+  const jobsOf = async () => {
+    const picks = books.filter(b => sel.has(b.id)); if (!picks.length) { toast('Tick some books first'); return null; }
+    save(); const out = [], seen = new Set(), ui = { msg: m => { res.textContent = m; } };
+    for (const b of picks) for (const j of await jobsFor(b, d, ui)) { let n = j.name, k = 1; while (seen.has(n.toLowerCase())) n = j.name.replace(/(\.\w+)$/, ` (${++k})$1`); seen.add(n.toLowerCase()); out.push({ name: n, get: j.get }); }
+    if (!out.length) { res.innerHTML = '<span class="warn">None of the selected books has an EPUB/XTC/TXT file.</span>'; return null; }
+    return out;
+  };
+  q('#x_stage').onclick = async () => {
+    q('#x_stage').disabled = true;
+    try {
+      const jobs = await jobsOf(); if (!jobs) return;
+      const dir = await root.getDirectoryHandle(STAGE, { create: true }), old = []; for await (const [n] of dir.entries()) old.push(n);
+      for (const n of old) await dir.removeEntry(n, { recursive: true });
+      let i = 0; for (const j of jobs) { res.textContent = `Copying ${++i}/${jobs.length}…`; await writeFile(dir, j.name, await j.get()); }
+      res.innerHTML = `<b style="color:var(--good)">${jobs.length} file${jobs.length === 1 ? '' : 's'} ready</b> in “${esc(root.name)} › ${STAGE}”. Now upload them from the reader page. Run Prepare again for a new batch (it replaces this folder’s contents; the library itself isn’t touched).`;
+    } catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+    q('#x_stage').disabled = false;
+  };
+  q('#x_dl').onclick = async () => {
+    try { const jobs = await jobsOf(); if (!jobs) return; for (const j of jobs) { downloadBlob(await j.get(), j.name); await nap(400); } res.textContent = `${jobs.length} file(s) downloaded — pick them in the reader page’s Upload.`; }
+    catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+  };
+  q('#x_wifi').onclick = async () => {
+    const chosen = books.filter(b => sel.has(b.id)); if (!chosen.length) return toast('Tick some books first');
+    save(); q('#x_wifi').disabled = true; q('#x_rep').textContent = '';
+    const ui = { msg: m => { res.textContent = m; }, bar() { } };
+    try {
+      const r = await sendBooks(chosen, { ...d, type: 'auto', host: d.host.replace(/^https?:\/\//i, '').replace(/\/.*$/, '') }, ui);
+      res.innerHTML = (r.ok ? `<b style="color:var(--good)">Sent ${r.ok} file${r.ok === 1 ? '' : 's'}.</b> ` : '<b>Nothing sent.</b> ') +
+        (r.exists.length ? `<div>Already on the reader (left as is): ${esc(r.exists.slice(0, 4).join(', '))}${r.exists.length > 4 ? '…' : ''}</div>` : '') +
+        (r.skip.length ? `<div class="warn">Skipped (no EPUB/XTC/TXT): ${esc(r.skip.slice(0, 4).join(', '))}</div>` : '') +
+        (r.fail.length ? `<div class="warn">${esc(r.fail.slice(0, 2).join(' · '))}<br>Press Diagnose Wi-Fi to see why.</div>` : '');
+    } catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+    q('#x_wifi').disabled = false;
+  };
+  if (location.protocol === 'https:') {
+    q('#x_fr').style.display = 'none'; q('#x_go').hidden = true;
+    q('#x_note').innerHTML = 'This page is on https, so the reader can’t be shown inside it (that is normal). Tick books and press <b>Send over Wi-Fi</b> — when Chrome asks to connect to devices on your local network, choose <b>Allow</b>. <b>Pop out</b> opens the reader’s own page if you prefer to upload by hand.';
+  }
+  q('#x_sd').onclick = async () => {
+    if (!window.showDirectoryPicker) return toast('This browser can’t write to a folder — use Prepare files instead');
+    const chosen = books.filter(b => sel.has(b.id)); if (!chosen.length) return toast('Tick some books first');
+    q('#x_sd').disabled = true;
+    try {
+      save(); const target = await showDirectoryPicker({ mode: 'readwrite' }), tpl = q('#x_lay').value, ui = { msg: m => { res.textContent = m; } }; let n = 0;
+      for (const b of chosen) for (const j of await jobsFor(b, d, ui)) {
+        let dir = target; for (const seg of layoutSegments(b, tpl)) dir = await dir.getDirectoryHandle(seg, { create: true });
+        res.textContent = `Copying ${++n}: ${j.name}`; await writeFile(dir, j.name, await j.get());
+      }
+      res.innerHTML = n ? `<b style="color:var(--good)">${n} file${n === 1 ? '' : 's'} copied</b> to “${esc(target.name)}”. Eject the card safely, put it back in the reader and open it from the file browser.` : '<span class="warn">None of the selected books has an EPUB/XTC/TXT file.</span>';
+    } catch (e) { if (e.name !== 'AbortError') res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+    q('#x_sd').disabled = false;
+  };
+  q('#x_diag').onclick = async () => {
+    save(); q('#x_diag').disabled = true; res.innerHTML = '<b>Testing…</b> If Chrome asks to connect to devices on your local network, tap <b>Allow</b> (it waits up to 45 s). Keep the reader’s File Transfer screen open.'; q('#x_rep').textContent = '';
+    const r = await wifiDoctor(d.host.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/:\d+$/, ''), d.port || 81);
+    res.innerHTML = `<b>${esc(r.verdict.split(':')[0] === 'WORKS' ? 'Wi-Fi works' : 'Result')}</b> <button type="button" id="x_copy" style="padding:2px 8px;font-size:12px;min-height:0">Copy report</button>`;
+    q('#x_rep').textContent = r.text; q('#x_copy').onclick = () => { try { navigator.clipboard.writeText(r.text); toast('Report copied'); } catch { toast('Select the text to copy it'); } };
+    q('#x_diag').disabled = false;
+  };
+  q('#x_files').onclick = () => { save(); closeModal(); readerFilesDialog(d.host); };
+  q('#x_direct').onclick = () => { save(); const l = books.filter(b => sel.has(b.id)); closeModal(); directSendDialog(l); };
+  q('#x_no').onclick = closeModal;
+  if (location.protocol !== 'https:' && list.length) q('#x_fr').src = url();
+}
+function directSendDialog(list) {
+  const d = Object.assign({ type: 'auto', host: 'crosspoint.local', port: 81, path: '/Books', fmt: 'auto', convert: true }, prefs.dev);
+  const box = modal(`<h3>Send to eReader</h3>
+    <p class="mute">${list.length ? `${list.length} book${list.length === 1 ? '' : 's'} selected.` : 'Set up your reader here, then select books and choose Send to eReader.'}</p>
+    ${location.protocol === 'content:' ? '<p class="warn">This page was opened from Android’s Downloads (content://), which Chrome blocks from reaching local devices. See Diagnose Wi-Fi.</p>' : ''}
+    <label class="l">Method</label><select id="d_type"><option value="auto">Auto — fast WebSocket, falls back to web upload</option><option value="form">Web upload via browser form (most compatible)</option><option value="ws">Xteink / CrossPoint — WebSocket only</option><option value="http">Xteink / CrossPoint — HTTP upload</option></select>
+    <div id="d_net"><div class="fgrid"><div><label class="l">Reader address</label><input id="d_host" value="${esc(d.host)}" spellcheck="false"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${['crosspoint.local', '192.168.4.1', '192.168.3.3'].map(h => `<button type="button" data-h="${h}" style="padding:3px 8px;font-size:12px;min-height:0">${h}</button>`).join('')}<button type="button" id="d_open" style="padding:3px 8px;font-size:12px;min-height:0">Open reader page ↗</button></div></div><div id="d_pw"><label class="l">WebSocket port</label><input id="d_port" type="number" value="${d.port}"></div></div></div>
+    <label class="l">Folder on the reader — tokens like {author} or {series} work</label><input id="d_path" value="${esc(d.path)}" spellcheck="false">
+    <label class="l">Which file to send</label><select id="d_fmt"><option value="auto">EPUB first, else XTCH/XTC, else TXT</option><option value="xtc">XTCH/XTC first, else EPUB, else TXT</option><option value="all">Every reader-ready format</option></select>
+    <label class="opt"><input type="checkbox" id="d_cv"${d.convert ? ' checked' : ''}> No EPUB/XTC? Convert CBZ → EPUB on the fly (not saved to the library)</label>
+    <p id="d_help" class="mute" style="font-size:12px"></p><div id="d_res" style="min-height:1.4em"></div><div class="pbar"><i id="d_bar"></i></div>
+    <div class="btns"><button class="primary" id="d_go"${list.length ? '' : ' disabled'}>Send</button><button id="d_test">Test connection</button><button id="d_share">Share…</button><button id="d_no">Close</button></div>`);
+  const q = s => box.querySelector(s), res = q('#d_res');
+  q('#d_type').value = d.type; q('#d_fmt').value = d.fmt;
+  const read = () => { Object.assign(d, { type: q('#d_type').value, host: normHost(q('#d_host').value), port: +q('#d_port').value || 81, path: q('#d_path').value.trim() || '/', fmt: q('#d_fmt').value, convert: q('#d_cv').checked }); prefs.dev = { ...d }; savePrefs(); return d; };
+  const sync = () => {
+    const t = q('#d_type').value; q('#d_pw').hidden = t === 'http' || t === 'form';
+    q('#d_help').textContent = 'On the reader, open File Transfer and leave that screen open, then join the same Wi-Fi (or the reader’s hotspot). Type the IP shown on the reader’s screen — “.local” names often don’t resolve on Android and Windows. Stock firmware has no fast WebSocket; Auto handles that.';
+  };
+  q('#d_type').onchange = sync; sync();
+  q('#d_no').onclick = closeModal;
+  box.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { q('#d_host').value = b.dataset.h; });
+  q('#d_open').onclick = () => window.open('http://' + (q('#d_host').value.trim() || 'crosspoint.local'), '_blank');
+  q('#d_test').onclick = async () => {
+    read(); res.textContent = 'Checking the reader…'; q('#d_test').disabled = true;
+    const wsTry = () => new Promise(r => {
+      let ws; const t = setTimeout(() => { try { ws.close(); } catch { } r(false); }, 4000);
+      try { ws = new WebSocket(`ws://${httpHost(d)}:${d.port}/`); } catch { clearTimeout(t); return r(false); }
+      ws.onopen = () => { clearTimeout(t); ws.close(); r(true); }; ws.onerror = () => { clearTimeout(t); r(false); };
+    });
+    const httpTry = async () => { const c = new AbortController(), t = setTimeout(() => c.abort(), 4000); try { await fetch(`http://${httpHost(d)}/`, { mode: 'no-cors', signal: c.signal, cache: 'no-store' }); return true; } catch { return false; } finally { clearTimeout(t); } };
+    const [w, h] = await Promise.all([wsTry(), httpTry()]); q('#d_test').disabled = false;
+    const good = m => `<span style="color:var(--good)">${m}</span>`;
+    if (w && h) res.innerHTML = good('Connected — the reader’s web page and fast WebSocket both respond.');
+    else if (w) res.innerHTML = good('WebSocket connected.');
+    else if (h) { q('#d_type').value = 'form'; sync(); read(); res.innerHTML = good('The reader’s web page responds but the fast WebSocket doesn’t (stock firmware, or a different port). Switched to browser form upload.'); }
+    else res.innerHTML = '<span class="warn">Can’t reach the reader. Check: (1) this device is on the reader’s hotspot or the same Wi-Fi; (2) the reader’s File Transfer screen is open; (3) use the IP shown on its screen, not a .local name; (4) this page is opened from disk or http://, not https://; (5) accept any “local network access” prompt from the browser. Otherwise use <b>Open reader page</b> or the ZIP method.</span>';
+  };
+  q('#d_share').hidden = !(navigator.share && navigator.canShare); q('#d_share').disabled = !list.length;
+  q('#d_share').onclick = async () => {
+    read(); const files = [], MT = { epub: 'application/epub+zip', txt: 'text/plain' };
+    try {
+      for (const b of list) for (const j of await jobsFor(b, d, { msg: m => { res.textContent = m; } })) { const bl = await j.get(); files.push(new File([bl], j.name, { type: MT[extOf(j.name)] || bl.type || 'application/octet-stream' })); }
+      if (!files.length) return toast('Nothing reader-ready to share');
+      if (!navigator.canShare({ files })) return toast('This browser can’t share these file types');
+      await navigator.share({ files }); res.textContent = '';
+    } catch (e) { if (e.name !== 'AbortError') res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+  };
+  q('#d_go').onclick = async () => {
+    read(); const ui = { msg: m => { res.textContent = m; }, bar: p => { q('#d_bar').style.width = p + '%'; } };
+    q('#d_go').disabled = q('#d_test').disabled = true;
+    try {
+      const r = await sendBooks(list, d, ui);
+      ui.bar(100);
+      res.innerHTML = `<b style="color:var(--good)">${r.ok ? `Sent ${r.ok} file${r.ok === 1 ? '' : 's'}.` : 'Nothing sent.'}</b>` +
+        ((d.type === 'http' || d.type === 'form' || d._http) && r.ok ? ` <small>(Web uploads can’t be confirmed from a browser — <a href="http://${esc(httpHost(d))}/files" target="_blank">open the reader’s file list ↗</a> to check.)</small>` : '') +
+        (r.skip.length ? `<div class="warn">Skipped (no reader-ready file): ${esc(r.skip.slice(0, 5).join(', '))}${r.skip.length > 5 ? '…' : ''}</div>` : '') +
+        (r.fail.length ? `<div class="warn">${esc(r.fail.slice(0, 3).join(' · '))}</div>` : '');
+    } catch (e) { res.innerHTML = `<span class="warn">${esc(e.message)}</span>`; }
+    q('#d_go').disabled = q('#d_test').disabled = false;
+  };
+}
+
+/* ================= wiring ================= */
+$('#group').innerHTML = '<option value="">Group: none</option>' + FACETS.map(f => `<option value="${f.k}">Group: ${f.label}</option>`).join('');
+$('#addBtn').onclick = async () => {
+  if (window.showOpenFilePicker) {
+    try {
+      const hs = await showOpenFilePicker({ multiple: true });
+      await startImport(hs.map(h => ({ name: h.name, handle: h, parent: null, segs: [h.name], srcRoot: null })));
+    } catch (e) { if (e.name !== 'AbortError') alert(e.message); }
+  } else $('#fileIn').click();
+};
+const fromFileList = fl => [...fl].map(f => ({ name: f.name, file: f, parent: null, segs: [f.name], srcRoot: null }));
+$('#fileIn').onchange = e => { startImport(fromFileList(e.target.files)); e.target.value = ''; };
+$('#dirIn').onchange = e => { startImport(fromFileList(e.target.files).filter(i => BOOK_EXTS.has(extOf(i.name)))); e.target.value = ''; };
+$('#zipIn').onchange = e => { if (e.target.files[0]) restoreZip(e.target.files[0]); e.target.value = ''; };
+$('#coverIn').onchange = e => { if (e.target.files[0]) setCover(e.target.files[0]); e.target.value = ''; };
+$('#fmtIn').onchange = e => { if (e.target.files[0]) addFormat(e.target.files[0]); e.target.value = ''; };
+$('#q').oninput = e => { query = e.target.value; render(); };
+$('#sort').onchange = e => { prefs.sort = e.target.value; savePrefs(); render(); };
+$('#group').onchange = e => { prefs.group = e.target.value; savePrefs(); render(); };
+$('#descBtn').onclick = () => { prefs.desc = !prefs.desc; savePrefs(); render(); };
+$('#vGrid').onclick = () => { prefs.view = 'grid'; savePrefs(); render(); };
+$('#vList').onclick = () => { prefs.view = 'list'; savePrefs(); render(); };
+$('#fetchBtn').onclick = () => startFetch();
+$('#selbar').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.id === 'sbAll') { selected = new Set(lastList.map(b => b.id)); refreshSelection(); }
+  else if (t.id === 'sbFetch') startFetch();
+  else if (t.id === 'sbOrg') organizeDialog();
+  else if (t.id === 'sbMore') { const r = t.getBoundingClientRect(); showCtx(r.left, r.top - 4); }
+  else if (t.id === 'sbSend') sendDialog(selBooks());
+  else if (t.id === 'sbClear') { selected = new Set(); refreshSelection(); }
+});
+$('#modal').addEventListener('mousedown', e => { if (e.target.id === 'modal' && !fetchAbort) closeModal(); });
+$('#menuBtn').onclick = e => { e.stopPropagation(); $('#pop').hidden = !$('#pop').hidden; };
+document.addEventListener('click', () => $('#pop').hidden = true);
+$('#pop').onclick = async e => {
+  const a = e.target.dataset.act; if (!a) return;
+  try {
+    if (a === 'importFolder') { if (window.showDirectoryPicker) await importFromFolder(); else $('#dirIn').click(); }
+    if (a === 'importLast') await importFromFolder(e.target.onsrc);
+    if (a === 'fetch') await startFetch();
+    if (a === 'layout') layoutDialog();
+    if (a === 'reorg') await reorganizeAll();
+    if (a === 'rescan') await scan();
+    if (a === 'colls') collsDialog();
+    if (a === 'rename') renameDialog();
+    if (a === 'dups') dupDialog();
+    if (a === 'device') sendDialog([]);
+    if (a === 'reader') readerFilesDialog();
+    if (a === 'backupZip') await backupZip();
+    if (a === 'backupFolder') await backupFolder();
+    if (a === 'restoreZip') $('#zipIn').click();
+    if (a === 'csv') exportCsv();
+    if (a === 'switch') { $('#welcome').hidden = false; showWelcome(); }
+  } catch (err) { if (err.name !== 'AbortError') { unbusy(); alert(err.message); } }
+};
+$('#side').addEventListener('click', e => {
+  if (e.target.closest('[data-all]')) { filters = {}; return render(); }
+  const it = e.target.closest('.it'); if (it && it.dataset.x) return sideX(e, it);
+  if (it) { const k = it.dataset.k, v = facetLists[k][+it.dataset.i]; if (filters[k] === v) delete filters[k]; else filters[k] = v; render(); }
+});
+$('#side').addEventListener('toggle', e => { const k = e.target.dataset.k; if (!k) return; e.target.open ? openFacets.add(k) : openFacets.delete(k); }, true);
+$('#main').addEventListener('click', e => {
+  const chip = e.target.closest('[data-chip]'); if (chip) { delete filters[chip.dataset.chip]; return render(); }
+  if (Date.now() - lpFired < 700) return;
+  const c = e.target.closest('[data-id]'); if (!c) return;
+  const id = c.dataset.id;
+  if (e.shiftKey && lastId) {
+    const ids = lastList.map(b => b.id), a = ids.indexOf(lastId), z = ids.indexOf(id);
+    if (a >= 0 && z >= 0) selected = new Set(ids.slice(Math.min(a, z), Math.max(a, z) + 1));
+  } else if (e.ctrlKey || e.metaKey) { selected.has(id) ? selected.delete(id) : selected.add(id); lastId = id; }
+  else if (selMode) { selected.has(id) ? selected.delete(id) : selected.add(id); lastId = id; if (!selected.size) selMode = false; }
+  else { selected = new Set([id]); lastId = id; }
+  refreshSelection();
+});
+$('#detail').addEventListener('click', async e => {
+  const b = cur(), t = e.target.closest('button,select,input') || e.target;
+  try {
+    if (t.id === 'fetchOne') await startFetch([b]);
+    else if (t.id === 'bulkFetch') await startFetch();
+    else if (t.id === 'saveBtn') await saveDetail();
+    else if (t.id === 'closeBtn' || t.id === 'bulkClear') { selected = new Set(); refreshSelection(); }
+    else if (t.id === 'chCover') $('#coverIn').click();
+    else if (t.id === 'addFmt') $('#fmtIn').click();
+    else if (t.id === 'delBook') await deleteBook(b);
+    else if (t.id === 'bulkApply') await bulkApply();
+    else if (t.id === 'bulkOrg') organizeDialog();
+    else if (t.id === 'bulkSend') sendDialog(selBooks());
+    else if (t.id === 'sendOne') sendDialog([b]);
+    else if (t.id === 'bulkTagGenre') await bulkTagsToGenres();
+    else if (t.id === 'bulkDel') await bulkDelete();
+    else if (t.dataset.dl != null) await downloadFormat(b, b.formats[+t.dataset.dl]);
+    else if (t.dataset.rm != null) await removeFormat(b, +t.dataset.rm);
+  } catch (err) { unbusy(); alert(err.message); }
+});
+$('#detail').addEventListener('change', e => {
+  const t = e.target; if (t.dataset.cv == null || !t.value) return;
+  const b = cur(), f = b.formats[+t.dataset.cv], v = t.value; t.value = '';
+  convertFormat(b, f, v);
+});
+let dragN = 0;
+addEventListener('dragenter', e => { e.preventDefault(); if (root) { dragN++; $('#drop').hidden = false; } });
+addEventListener('dragleave', e => { if (--dragN <= 0) { dragN = 0; $('#drop').hidden = true; } });
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', async e => {
+  e.preventDefault(); dragN = 0; $('#drop').hidden = true; if (!root) return;
+  // DataTransfer items are only valid synchronously, so start every lookup before awaiting anything
+  const its = [...e.dataTransfer.items].filter(i => i.kind === 'file').map(i => ({ h: i.getAsFileSystemHandle ? i.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null), f: i.getAsFile() }));
+  const items = [];
+  for (const { h: hp, f } of its) {
+    const h = await hp;
+    if (h && h.kind === 'directory') {
+      if (await sameOrNested(h)) continue;
+      for await (const x of walk(h)) if (BOOK_EXTS.has(extOf(x.path))) items.push({ name: x.handle.name, handle: x.handle, parent: x.parent, segs: [h.name, ...x.path.split('/')].slice(1), srcRoot: h });
+    } else if (h && h.kind === 'file') items.push({ name: h.name, handle: h, parent: null, segs: [h.name], srcRoot: null });
+    else if (f) items.push({ name: f.name, file: f, parent: null, segs: [f.name], srcRoot: null });
+  }
+  if (items.length) startImport(items); else toast('No books found in what you dropped');
+});
+addEventListener('keydown', e => {
+  const inField = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName), modalOpen = !$('#modal').hidden;
+  if (e.key === 'Escape') {
+    if (fetchAbort) return fetchAbort.abort();
+    if (modalOpen) return closeModal();
+    if (selected.size && !inField) { selected = new Set(); refreshSelection(); }
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && root && !inField && !modalOpen) {
+    e.preventDefault(); selected = new Set(lastList.map(b => b.id)); refreshSelection();
+  }
+});
+
+/* ---- right-click / "more" menu for books ---- */
+const ctxEl = document.createElement('div'); ctxEl.id = 'ctx'; ctxEl.hidden = true; document.body.appendChild(ctxEl);
+let ctxItems = [], ctxList = [];
+const hideCtx = () => { ctxEl.hidden = true; };
+function showCtx(x, y) {
+  const list = ctxList = selBooks(); if (!list.length) return; const n = list.length, one = n === 1 ? list[0] : null, it = ctxItems = [];
+  const add = (label, fn, o = {}) => it.push({ label, fn, ...o }), sep = () => { if (it.length && !it[it.length - 1].sep) it.push({ sep: 1 }); };
+  add(n > 1 ? `Fetch metadata (${n})` : 'Fetch metadata', () => startFetch(list));
+  add('Send to eReader…', () => sendDialog(list));
+  sep(); it.push({ sec: 'Collections' });
+  const names = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp);
+  for (const nm of names.slice(0, 6)) { const all = list.every(b => b.collections.includes(nm)); add((all ? '✓ ' : '') + nm, () => all ? bulkEdit(list, b => { b.collections = b.collections.filter(c => c !== nm); }, `Removed from “${nm}”`) : addToCollection(list, nm)); }
+  add('New collection…', () => newCollection()); add('More organize options…', () => organizeDialog());
+  sep(); it.push({ sec: 'Reading status' }, { row: 'status' }, { sec: 'Rating' }, { row: 'rate' });
+  if (one) {
+    sep();
+    for (const f of one.formats) add(`Download ${f.ext.toUpperCase()}`, () => downloadFormat(one, f));
+    for (const f of one.formats) for (const k of Object.keys(CONVERTERS)) if (k.startsWith(f.ext + '>')) { const t = k.split('>')[1]; add(`Convert ${f.ext.toUpperCase()} → ${t.toUpperCase()}`, () => convertFormat(one, f, t)); }
+    sep();
+    const au = one.authors.find(a => a !== 'Unknown');
+    if (au) add(`More by ${au}`, () => { filters = { authors: au }; query = ''; $('#q').value = ''; render(); });
+    if (one.series) add(`Whole series: ${one.series}`, () => { filters = { series: one.series }; query = ''; $('#q').value = ''; render(); });
+    add('Copy title and author', () => { try { navigator.clipboard.writeText(`${one.title} — ${one.authors.join(', ')}`); toast('Copied'); } catch { toast(one.title); } });
+  }
+  sep(); add('Select all in view', () => { selected = new Set(lastList.map(b => b.id)); refreshSelection(); }); add('Clear selection', () => { selected = new Set(); refreshSelection(); });
+  sep(); add(n > 1 ? `Delete ${n} books…` : 'Delete book…', () => n > 1 ? bulkDelete() : deleteBook(one), { danger: 1 });
+  ctxEl.innerHTML = it.map((o, i) => o.sep ? '<hr>' : o.sec ? `<div class="cs">${esc(o.sec)}</div>` :
+    o.row === 'status' ? `<div class="cr">${[['unread', 'Unread'], ['reading', 'Reading'], ['finished', 'Done'], ['', 'Clear']].map(([k, l]) => `<button data-s="${k}">${l}</button>`).join('')}</div>` :
+    o.row === 'rate' ? `<div class="cr">${[1, 2, 3, 4, 5, 0].map(r => `<button data-r="${r}">${r ? r + '★' : '✕'}</button>`).join('')}</div>` :
+    `<button data-i="${i}"${o.danger ? ' class="danger"' : ''}>${esc(o.label)}</button>`).join('');
+  ctxEl.hidden = false; ctxEl.style.left = ctxEl.style.top = '0px';
+  const w = ctxEl.offsetWidth, h = ctxEl.offsetHeight;
+  ctxEl.style.left = Math.max(6, Math.min(x, innerWidth - w - 6)) + 'px'; ctxEl.style.top = Math.max(6, y + h > innerHeight - 6 ? y - h : y) + 'px';
+}
+ctxEl.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; hideCtx(); const list = ctxList;
+  if (b.dataset.i != null) ctxItems[+b.dataset.i].fn();
+  else if (b.dataset.s != null) bulkEdit(list, x => { x.status = b.dataset.s; }, 'Status updated');
+  else if (b.dataset.r != null) bulkEdit(list, x => { x.rating = +b.dataset.r; }, 'Rating updated');
+});
+document.addEventListener('mousedown', e => { if (!ctxEl.hidden && !ctxEl.contains(e.target)) hideCtx(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtx(); });
+addEventListener('resize', hideCtx); addEventListener('scroll', hideCtx, true);
+/* ---- phone: filter drawer + long-press multi-select ---- */
+$('#filtBtn').onclick = () => document.body.classList.toggle('sideopen');
+$('#scrim').onclick = () => document.body.classList.remove('sideopen');
+$('#side').addEventListener('click', e => { if (e.target.closest('.it,[data-all]') && e.target.dataset.x !== 'smartdel') document.body.classList.remove('sideopen'); });
+{
+  let lp = null; const m = $('#main');
+  m.addEventListener('touchstart', e => {
+    const c = e.target.closest('[data-id]'); if (!c) return; const id = c.dataset.id;
+    lp = setTimeout(() => { lp = null; selMode = true; selected.add(id); lastId = id; lpFired = Date.now(); navigator.vibrate && navigator.vibrate(15); refreshSelection(); }, 450);
+  }, { passive: true });
+  ['touchend', 'touchmove', 'touchcancel'].forEach(t => m.addEventListener(t, () => clearTimeout(lp), { passive: true }));
+  m.addEventListener('contextmenu', e => {
+    const c = e.target.closest('[data-id]'); if (!c) return; e.preventDefault();
+    if (matchMedia('(pointer:coarse)').matches) return;
+    if (!selected.has(c.dataset.id)) { selected = new Set([c.dataset.id]); lastId = c.dataset.id; refreshSelection(); }
+    showCtx(e.clientX, e.clientY);
+  });
+}
+
+/* Private browser storage (OPFS, used by Firefox/Safari) has no permission prompts at all, so a missing permission API means "already allowed" */
+const hasPerm = async (h, mode) => typeof h.queryPermission !== 'function' || (await h.queryPermission({ mode })) === 'granted';
+const askPerm = async (h, mode) => typeof h.requestPermission !== 'function' || (await h.requestPermission({ mode })) === 'granted';
+/* ---- welcome / startup ---- */
+async function showWelcome() {
+  const hasFS = !!window.showDirectoryPicker;
+  $('#pickBtn').hidden = !hasFS;
+  $('#fsnote').textContent = hasFS ? 'Tip: pick (or create) a dedicated folder, e.g. “Books/Library”. Browsers refuse top-level folders like Documents or Desktop.' : 'This browser cannot open real folders, so the library will be kept in private browser storage (use Backup regularly). For a real folder, use Chrome, Edge or another Chromium browser.';
+  const h = await kvGet('root'); const rb = $('#reopenBtn');
+  if (h && h.kind === 'directory' && h.name !== undefined) { pendingHandle = h; rb.hidden = false; rb.textContent = `Reopen “${h.name}”`; } else rb.hidden = true;
+}
+$('#pickBtn').onclick = async () => {
+  try { const h = await showDirectoryPicker({ mode: 'readwrite', id: 'bookshelf' }); await openLibrary(h); refreshMenu(); } catch (e) { if (e.name !== 'AbortError') alert(e.message); }
+};
+$('#reopenBtn').onclick = async () => {
+  try {
+    if ((await hasPerm(pendingHandle, 'readwrite')) || (await askPerm(pendingHandle, 'readwrite'))) { await openLibrary(pendingHandle, false); refreshMenu(); }
+    else toast('Permission was not granted');
+  } catch (e) { alert(e.message); }
+};
+$('#opfsBtn').onclick = async () => {
+  try { const r = await navigator.storage.getDirectory(); await openLibrary(await r.getDirectoryHandle('bookshelf-library', { create: true })); if (navigator.storage.persist) navigator.storage.persist(); }
+  catch (e) { alert('Private storage is not available: ' + e.message); }
+};
+(async () => {
+  if (!window.CompressionStream || !window.DecompressionStream) alert('This browser is too old (no CompressionStream support). Please update it.');
+  refreshMenu();
+  const h = await kvGet('root');
+  if (h && h.kind === 'directory') {
+    try { if (await hasPerm(h, 'readwrite')) return openLibrary(h, false); } catch { }
+  }
+  $('#welcome').hidden = false; showWelcome();
+})();
+</script>
+</body>
+</html>
