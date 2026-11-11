@@ -1022,7 +1022,7 @@ async function startImport(items) {
   if (opts.mode === 'move') {
     for (const r of new Set(items.map(i => i.srcRoot).filter(Boolean))) {
       try {
-        if (await r.queryPermission({ mode: 'readwrite' }) !== 'granted' && await r.requestPermission({ mode: 'readwrite' }) !== 'granted') { toast('Permission to change the source folder was denied, so files will be copied instead', 6000); opts.mode = 'copy'; break; }
+        if (!(await hasPerm(r, 'readwrite')) && !(await askPerm(r, 'readwrite'))) { toast('Permission to change the source folder was denied, so files will be copied instead', 6000); opts.mode = 'copy'; break; }
       } catch { opts.mode = 'copy'; break; }
     }
   }
@@ -1069,7 +1069,7 @@ async function sameOrNested(dir) {
 async function importFromFolder(saved) {
   try {
     let dir = saved;
-    if (dir) { if (await dir.queryPermission({ mode: 'read' }) !== 'granted' && await dir.requestPermission({ mode: 'read' }) !== 'granted') return toast('Permission denied'); }
+    if (dir) { if (!(await hasPerm(dir, 'read')) && !(await askPerm(dir, 'read'))) return toast('Permission denied'); }
     else dir = await showDirectoryPicker({ mode: 'read', id: 'bookshelf-src' });
     const bad = await sameOrNested(dir); if (bad) return alert(bad);
     busy('Looking for books…'); const items = [];
@@ -2574,6 +2574,9 @@ $('#side').addEventListener('click', e => { if (e.target.closest('.it,[data-all]
   });
 }
 
+/* Private browser storage (OPFS, used by Firefox/Safari) has no permission prompts at all, so a missing permission API means "already allowed" */
+const hasPerm = async (h, mode) => typeof h.queryPermission !== 'function' || (await h.queryPermission({ mode })) === 'granted';
+const askPerm = async (h, mode) => typeof h.requestPermission !== 'function' || (await h.requestPermission({ mode })) === 'granted';
 /* ---- welcome / startup ---- */
 async function showWelcome() {
   const hasFS = !!window.showDirectoryPicker;
@@ -2587,7 +2590,7 @@ $('#pickBtn').onclick = async () => {
 };
 $('#reopenBtn').onclick = async () => {
   try {
-    if ((await pendingHandle.requestPermission({ mode: 'readwrite' })) === 'granted') { await openLibrary(pendingHandle, false); refreshMenu(); }
+    if ((await hasPerm(pendingHandle, 'readwrite')) || (await askPerm(pendingHandle, 'readwrite'))) { await openLibrary(pendingHandle, false); refreshMenu(); }
     else toast('Permission was not granted');
   } catch (e) { alert(e.message); }
 };
@@ -2600,7 +2603,7 @@ $('#opfsBtn').onclick = async () => {
   refreshMenu();
   const h = await kvGet('root');
   if (h && h.kind === 'directory') {
-    try { if ((await h.queryPermission({ mode: 'readwrite' })) === 'granted') return openLibrary(h, false); } catch { }
+    try { if (await hasPerm(h, 'readwrite')) return openLibrary(h, false); } catch { }
   }
   $('#welcome').hidden = false; showWelcome();
 })();
