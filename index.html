@@ -247,7 +247,7 @@ tr.row.sel{background:var(--acc-soft)}
   .grp{margin:18px 0 8px;font-size:15px}th,td{padding:5px 10px}th{font-size:10.5px}
   #detail{width:330px}#detail .dbody{padding:12px}.menu .pop button{padding:6px 9px}
 }
-#ctx{position:fixed;z-index:80;min-width:210px;max-width:min(300px,92vw);max-height:94vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:4px}
+#ctx{position:fixed;z-index:300;min-width:210px;max-width:min(300px,92vw);max-height:94vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:4px}
 #ctx button{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 9px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
 #ctx button:hover{background:var(--acc-soft)}#ctx button.danger{color:var(--bad)}
 #ctx .ch{padding:6px 9px 4px;font-weight:600;font-size:12.5px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
@@ -277,7 +277,7 @@ table{border:0;box-shadow:var(--shadow);border-radius:14px}th{background:transpa
 .grp{font-family:inherit;font-size:15px;letter-spacing:-.02em;border:0}.chip{border-radius:999px;border-color:transparent}
 @media(min-width:821px){#selbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:40;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);background:color-mix(in srgb,var(--panel) 92%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:8px 12px;max-width:92vw}}
 /* carousel */
-.car{position:relative;margin:0 -6px 22px;--ch:360px}
+.car{position:relative;isolation:isolate;margin:0 -6px 22px;--ch:360px}
 .track{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:28px calc(50% - (var(--ch)*.3333 + 6px)) 0;scrollbar-width:none;outline:none;overscroll-behavior-x:contain}.track::-webkit-scrollbar{display:none}
 .car .card{flex:0 0 calc(var(--ch)*.6667 + 12px);scroll-snap-align:center;scroll-snap-stop:always;padding:6px;background:none!important;box-shadow:none!important;backface-visibility:hidden}
 .car .card.sel .cv{outline:3px solid var(--acc);outline-offset:3px}.car .cv{box-shadow:0 12px 34px rgba(0,0,0,.45)}
