@@ -250,6 +250,7 @@ tr.row.sel{background:var(--acc-soft)}
 #ctx{position:fixed;z-index:80;min-width:210px;max-width:min(300px,92vw);max-height:94vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:4px}
 #ctx button{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 9px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
 #ctx button:hover{background:var(--acc-soft)}#ctx button.danger{color:var(--bad)}
+#ctx .ch{padding:6px 9px 4px;font-weight:600;font-size:12.5px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
 #ctx hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 #ctx .cs{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute);padding:4px 9px 1px}
 #ctx .cr{display:flex;gap:2px;padding:2px 4px}#ctx .cr button{flex:1;text-align:center;padding:4px 2px;font-size:12px}
@@ -2703,11 +2704,13 @@ function rereadDialog(list) {
 }
 /* ---- right-click / "more" menu for books ---- */
 const ctxEl = document.createElement('div'); ctxEl.id = 'ctx'; ctxEl.hidden = true; document.body.appendChild(ctxEl);
-let ctxItems = [], ctxList = [];
+let ctxItems = [], ctxList = [], lastPtr = 'mouse';
+document.addEventListener('pointerdown', e => { lastPtr = e.pointerType || 'mouse'; }, true);
 const hideCtx = () => { ctxEl.hidden = true; };
 function showCtx(x, y) {
   const list = ctxList = selBooks(); if (!list.length) return; const n = list.length, one = n === 1 ? list[0] : null, it = ctxItems = [];
   const add = (label, fn, o = {}) => it.push({ label, fn, ...o }), sep = () => { if (it.length && !it[it.length - 1].sep) it.push({ sep: 1 }); };
+  it.push({ head: one ? one.title : `${n} books selected` });
   add(n > 1 ? `Fetch metadata (${n})` : 'Fetch metadata', () => startFetch(list));
   add('Send to eReader…', () => sendDialog(list));
   add('Re-read metadata from files…', () => rereadDialog(list));
@@ -2715,8 +2718,13 @@ function showCtx(x, y) {
   const names = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp);
   for (const nm of names.slice(0, 6)) { const all = list.every(b => b.collections.includes(nm)); add((all ? '✓ ' : '') + nm, () => all ? bulkEdit(list, b => { b.collections = b.collections.filter(c => c !== nm); }, `Removed from “${nm}”`) : addToCollection(list, nm)); }
   add('New collection…', () => newCollection()); add('More organize options…', () => organizeDialog());
+  add('Re-file in library folder', async () => { busy('Filing…'); try { await organize(list, true); } finally { unbusy(); } render(); toast('Filed'); });
   sep(); it.push({ sec: 'Reading status' }, { row: 'status' }, { sec: 'Rating' }, { row: 'rate' });
   if (one) {
+    sep();
+    add('Change cover…', () => $('#coverIn').click());
+    if (one.hasCover) add('Remove cover', async () => { try { await one._dir.removeEntry('cover.jpg'); } catch { } one.hasCover = false; const old = coverCache.get(one.id); if (old) { URL.revokeObjectURL(old); coverCache.delete(one.id); } await saveMeta(one); render(); toast('Cover removed'); });
+    add('Add another format…', () => $('#fmtIn').click());
     sep();
     for (const f of one.formats) add(`Download ${f.ext.toUpperCase()}`, () => downloadFormat(one, f));
     for (const f of one.formats) for (const k of Object.keys(CONVERTERS)) if (k.startsWith(f.ext + '>')) { const t = k.split('>')[1]; add(`Convert ${f.ext.toUpperCase()} → ${t.toUpperCase()}`, () => convertFormat(one, f, t)); }
@@ -2726,9 +2734,9 @@ function showCtx(x, y) {
     if (one.series) add(`Whole series: ${one.series}`, () => { filters = { series: one.series }; query = ''; $('#q').value = ''; render(); });
     add('Copy title and author', () => { try { navigator.clipboard.writeText(`${one.title} — ${one.authors.join(', ')}`); toast('Copied'); } catch { toast(one.title); } });
   }
-  sep(); add('Select all in view', () => { selected = new Set(lastList.map(b => b.id)); refreshSelection(); }); add('Clear selection', () => { selected = new Set(); refreshSelection(); });
+  sep(); add('Select all in view', () => { selected = new Set(lastList.map(b => b.id)); refreshSelection(); }); add('Invert selection', () => { selected = new Set(lastList.filter(b => !selected.has(b.id)).map(b => b.id)); refreshSelection(); }); add('Clear selection', () => { selected = new Set(); refreshSelection(); });
   sep(); add(n > 1 ? `Delete ${n} books…` : 'Delete book…', () => n > 1 ? bulkDelete() : deleteBook(one), { danger: 1 });
-  ctxEl.innerHTML = it.map((o, i) => o.sep ? '<hr>' : o.sec ? `<div class="cs">${esc(o.sec)}</div>` :
+  ctxEl.innerHTML = it.map((o, i) => o.sep ? '<hr>' : o.head ? `<div class="ch">${esc(o.head)}</div>` : o.sec ? `<div class="cs">${esc(o.sec)}</div>` :
     o.row === 'status' ? `<div class="cr">${[['unread', 'Unread'], ['reading', 'Reading'], ['finished', 'Done'], ['', 'Clear']].map(([k, l]) => `<button data-s="${k}">${l}</button>`).join('')}</div>` :
     o.row === 'rate' ? `<div class="cr">${[1, 2, 3, 4, 5, 0].map(r => `<button data-r="${r}">${r ? r + '★' : '✕'}</button>`).join('')}</div>` :
     `<button data-i="${i}"${o.danger ? ' class="danger"' : ''}>${esc(o.label)}</button>`).join('');
@@ -2758,7 +2766,7 @@ $('#side').addEventListener('click', e => { if (e.target.closest('.it,[data-all]
   ['touchend', 'touchmove', 'touchcancel'].forEach(t => m.addEventListener(t, () => clearTimeout(lp), { passive: true }));
   m.addEventListener('contextmenu', e => {
     const c = e.target.closest('[data-id]'); if (!c) return; e.preventDefault();
-    if (matchMedia('(pointer:coarse)').matches) return;
+    if (lastPtr === 'touch') return;
     if (!selected.has(c.dataset.id)) { selected = new Set([c.dataset.id]); lastId = c.dataset.id; refreshSelection(); }
     showCtx(e.clientX, e.clientY);
   });
