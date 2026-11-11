@@ -233,6 +233,27 @@ tr.row.sel{background:var(--acc-soft)}
 .xf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px}.xlist{max-height:44vh;overflow:auto;border:1px solid var(--line,#8886);border-radius:8px;margin:6px 0}
 .xlist label{display:flex;gap:8px;padding:7px 9px;align-items:center;border-bottom:1px solid var(--line,#8883);cursor:pointer}.xfr{width:100%;height:52vh;border:1px solid var(--line,#8886);border-radius:8px;background:#fff}
 .xrow{display:flex;gap:6px}.xrow input{flex:1;min-width:0}@media(max-width:700px){.xf{grid-template-columns:1fr}.xfr{height:55vh}}
+
+/* ---- compact desktop layout ---- */
+@media(min-width:821px){
+  body{font-size:13.5px}button{padding:5px 10px;border-radius:7px;gap:6px}button.ib{padding:5px 7px}
+  input,select,textarea{padding:5px 9px;border-radius:7px}.i{width:16px;height:16px}
+  header.top{padding:6px 12px;gap:8px}.brand{gap:8px}.brand .logo{width:26px;height:26px}.brand b{font-size:17px}.brand small{display:none}
+  .search input{padding:5px 10px 5px 32px}.search .i{left:10px}.tools{gap:6px}.seg button{padding:5px 8px}
+  #selbar{padding:4px 12px;gap:8px}
+  #side{width:210px;padding:8px}#side .it{padding:3px 8px}#side summary{padding:4px}#side details{margin:0 0 4px}
+  #main{padding:12px 16px}.grid{grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:14px 10px}
+  .card{padding:6px;border-radius:10px}.card .t{font-size:12.5px;margin-top:6px}.card .a{font-size:11.5px}
+  .grp{margin:18px 0 8px;font-size:15px}th,td{padding:5px 10px}th{font-size:10.5px}
+  #detail{width:330px}#detail .dbody{padding:12px}.menu .pop button{padding:6px 9px}
+}
+#ctx{position:fixed;z-index:80;min-width:210px;max-width:min(300px,92vw);max-height:94vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:4px}
+#ctx button{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 9px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+#ctx button:hover{background:var(--acc-soft)}#ctx button.danger{color:var(--bad)}
+#ctx hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+#ctx .cs{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute);padding:4px 9px 1px}
+#ctx .cr{display:flex;gap:2px;padding:2px 4px}#ctx .cr button{flex:1;text-align:center;padding:4px 2px;font-size:12px}
+@media(max-width:700px){#ctx button{padding:11px 12px;font-size:15px}#ctx .cr button{padding:10px 2px}}
 </style>
 </head>
 <body>
@@ -926,7 +947,8 @@ async function scan() {
 }
 
 /* ================= import ================= */
-const dupKey = (t, a) => `${String(t).toLowerCase().trim()}|${String(a[0] || '').toLowerCase().trim()}`;
+const dupFold = x => String(x || '').toLowerCase().replace(/[_\-‐-―]+/g, ' ').replace(/\s+/g, ' ').trim();
+const dupKey = (t, a) => `${dupFold(t)}|${dupFold(a[0])}`;
 async function addBook(file, { dup = 'merge' } = {}) {
   const ext = extOf(file.name) || 'bin'; let m = {};
   try { m = await extractMeta(file, ext); } catch (e) { console.warn('metadata', file.name, e); }
@@ -1159,7 +1181,7 @@ function updateSelBar() {
   document.body.classList.toggle('selmode', selMode && n > 0); $('#filtBtn').classList.toggle('primary', Object.keys(filters).length > 0);
   if (!n) { el.hidden = true; return; }
   el.hidden = false;
-  el.innerHTML = `<b>${n} selected</b>${n < lastList.length ? `<button class="ghost" id="sbAll">Select all ${lastList.length} shown</button>` : ''}<span class="sp"></span><button id="sbOrg">${ic('plus')} Organize…</button><button id="sbSend">${ic('send')} Send to eReader…</button><button id="sbFetch">${ic('cloud')} Fetch metadata &amp; covers</button><button id="sbClear" class="ghost">${ic('x')} Clear</button>`;
+  el.innerHTML = `<b>${n} selected</b>${n < lastList.length ? `<button class="ghost" id="sbAll">Select all ${lastList.length} shown</button>` : ''}<span class="sp"></span><button id="sbMore" class="ib" title="More actions">⋯</button><button id="sbOrg">${ic('plus')} Organize…</button><button id="sbSend">${ic('send')} Send to eReader…</button><button id="sbFetch">${ic('cloud')} Fetch metadata &amp; covers</button><button id="sbClear" class="ghost">${ic('x')} Clear</button>`;
 }
 async function renderDetail() {
   const el = $('#detail');
@@ -1400,7 +1422,7 @@ const FETCH_FIELDS = [
 const LANG3 = { eng: 'en', fre: 'fr', fra: 'fr', ger: 'de', deu: 'de', spa: 'es', ita: 'it', por: 'pt', rus: 'ru', jpn: 'ja', chi: 'zh', zho: 'zh', hin: 'hi', ara: 'ar', dut: 'nl', nld: 'nl', lat: 'la', kor: 'ko', swe: 'sv', pol: 'pl', tur: 'tr', heb: 'he', gre: 'el', ell: 'el' };
 const mapLang = c => c ? (LANG3[c] || c) : '';
 const padDate = d => { d = String(d || '').trim(); return /^\d{4}$/.test(d) ? d + '-01-01' : /^\d{4}-\d{2}$/.test(d) ? d + '-01' : /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(0, 10) : ''; };
-const cleanTitle = t => String(t || '').replace(/\(.*?\)|\[.*?\]|\{.*?\}/g, ' ').replace(/_+/g, ' ').replace(/\b(z-?library|libgen|epub|mobi|pdf|retail|ebook)\b/ig, ' ').replace(/\s+/g, ' ').trim();
+const cleanTitle = t => String(t || '').replace(/\(.*?\)|\[.*?\]|\{.*?\}/g, ' ').replace(/[_\-‐-―]+/g, ' ').replace(/\b(z-?library|libgen|epub|mobi|pdf|retail|ebook)\b/ig, ' ').replace(/\s+/g, ' ').trim();
 const SUBJECT_JUNK = /accessible|daisy|in library|large type|reading level|internet archive|overdrive|^nyt:|^lcsh|^(series|place|time|person|collection):|^\d+$/i;
 const cleanSubjects = arr => uniq((arr || []).map(s => String(s).trim()).filter(s => s && s.length <= 40 && !SUBJECT_JUNK.test(s))).slice(0, 6);
 const richText = h => plain(String(h || '').replace(/<\/p>|<br\s*\/?>/gi, '\n')).replace(/[ \t]*\n[ \t]*/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
@@ -1415,7 +1437,7 @@ function dice(a, b) {
   for (const [g, v] of A) if (B.has(g)) inter += Math.min(v, B.get(g));
   return ta + tb ? 2 * inter / (ta + tb) : 0;
 }
-const mainTitle = t => String(t || '').split(/[:—]| - /)[0];
+const mainTitle = t => String(t || '').replace(/_+/g, ' ').split(/[:—–]| - /)[0];
 const titleSim = (a, b) => Math.max(dice(a, b), dice(mainTitle(a), mainTitle(b)));
 const nameTokens = a => { a = String(a); if (a.includes(',')) a = a.split(',').reverse().join(' '); return normT(a).split(' ').filter(Boolean); };
 const lastNames = arr => arr.map(a => { const w = nameTokens(a); return w[w.length - 1] || ''; }).filter(Boolean);
@@ -1683,8 +1705,11 @@ function computeChanges(b, m, o, coverBlob) {
   if (coverBlob) changes.push({ k: 'cover', label: 'Cover', from: '', to: 'new cover found' });
   return { patch, changes };
 }
-async function lookupBook(book, opts, sig) {
-  const res = { book, status: 'none', changes: [], patch: {}, coverBlob: null, sources: [] };
+async function lookupBook(book0, opts, sig) {
+  /* match on a copy with underscores/hyphens turned into spaces ("Dune_Messiah", "one-piece-vol-1" → normal words); the real book is left untouched */
+  const fold = x => String(x || '').replace(/[_\-‐-―]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const book = { ...book0, title: fold(book0.title), authors: (book0.authors || []).map(a => fold(a) || a), series: fold(book0.series) };
+  const res = { book: book0, status: 'none', changes: [], patch: {}, coverBlob: null, sources: [] };
   const all = [], errs = [], queried = new Set();
   /* services are asked at the same time, in two waves (the second only fills gaps), so one slow service can't hold up the rest */
   const wave = async list => {
@@ -1705,7 +1730,7 @@ async function lookupBook(book, opts, sig) {
   for (const c of all) c.score = c.byIsbn ? 1 : scoreCand(book, c);
   all.sort((a, b) => b.score - a.score || SRC_PREF[a.src] - SRC_PREF[b.src] || (b.popularity || 0) - (a.popularity || 0));
   const best = all[0];
-  if (!best || best.score < 0.5) {
+  if (!best || best.score < 0.4) {
     if (!all.length && errs.length) { res.status = 'error'; res.error = errs[0].message; } else if (best) res.closest = best.title;
     return res;
   }
@@ -1736,7 +1761,7 @@ async function lookupBook(book, opts, sig) {
       } catch (e) { if (sig.aborted) throw e; }
     }
   }
-  const { patch, changes } = computeChanges(book, m, opts, coverBlob);
+  const { patch, changes } = computeChanges(book0, m, opts, coverBlob);
   return { ...res, status: 'ok', m, score: best.score, confident: best.score >= 0.85, patch, changes, coverBlob, sources: uniq(used.map(x => x.src)) };
 }
 
@@ -2385,6 +2410,7 @@ $('#selbar').addEventListener('click', e => {
   if (t.id === 'sbAll') { selected = new Set(lastList.map(b => b.id)); refreshSelection(); }
   else if (t.id === 'sbFetch') startFetch();
   else if (t.id === 'sbOrg') organizeDialog();
+  else if (t.id === 'sbMore') { const r = t.getBoundingClientRect(); showCtx(r.left, r.top - 4); }
   else if (t.id === 'sbSend') sendDialog(selBooks());
   else if (t.id === 'sbClear') { selected = new Set(); refreshSelection(); }
 });
@@ -2486,6 +2512,49 @@ addEventListener('keydown', e => {
   }
 });
 
+/* ---- right-click / "more" menu for books ---- */
+const ctxEl = document.createElement('div'); ctxEl.id = 'ctx'; ctxEl.hidden = true; document.body.appendChild(ctxEl);
+let ctxItems = [], ctxList = [];
+const hideCtx = () => { ctxEl.hidden = true; };
+function showCtx(x, y) {
+  const list = ctxList = selBooks(); if (!list.length) return; const n = list.length, one = n === 1 ? list[0] : null, it = ctxItems = [];
+  const add = (label, fn, o = {}) => it.push({ label, fn, ...o }), sep = () => { if (it.length && !it[it.length - 1].sep) it.push({ sep: 1 }); };
+  add(n > 1 ? `Fetch metadata (${n})` : 'Fetch metadata', () => startFetch(list));
+  add('Send to eReader…', () => sendDialog(list));
+  sep(); it.push({ sec: 'Collections' });
+  const names = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp);
+  for (const nm of names.slice(0, 6)) { const all = list.every(b => b.collections.includes(nm)); add((all ? '✓ ' : '') + nm, () => all ? bulkEdit(list, b => { b.collections = b.collections.filter(c => c !== nm); }, `Removed from “${nm}”`) : addToCollection(list, nm)); }
+  add('New collection…', () => newCollection()); add('More organize options…', () => organizeDialog());
+  sep(); it.push({ sec: 'Reading status' }, { row: 'status' }, { sec: 'Rating' }, { row: 'rate' });
+  if (one) {
+    sep();
+    for (const f of one.formats) add(`Download ${f.ext.toUpperCase()}`, () => downloadFormat(one, f));
+    for (const f of one.formats) for (const k of Object.keys(CONVERTERS)) if (k.startsWith(f.ext + '>')) { const t = k.split('>')[1]; add(`Convert ${f.ext.toUpperCase()} → ${t.toUpperCase()}`, () => convertFormat(one, f, t)); }
+    sep();
+    const au = one.authors.find(a => a !== 'Unknown');
+    if (au) add(`More by ${au}`, () => { filters = { authors: au }; query = ''; $('#q').value = ''; render(); });
+    if (one.series) add(`Whole series: ${one.series}`, () => { filters = { series: one.series }; query = ''; $('#q').value = ''; render(); });
+    add('Copy title and author', () => { try { navigator.clipboard.writeText(`${one.title} — ${one.authors.join(', ')}`); toast('Copied'); } catch { toast(one.title); } });
+  }
+  sep(); add('Select all in view', () => { selected = new Set(lastList.map(b => b.id)); refreshSelection(); }); add('Clear selection', () => { selected = new Set(); refreshSelection(); });
+  sep(); add(n > 1 ? `Delete ${n} books…` : 'Delete book…', () => n > 1 ? bulkDelete() : deleteBook(one), { danger: 1 });
+  ctxEl.innerHTML = it.map((o, i) => o.sep ? '<hr>' : o.sec ? `<div class="cs">${esc(o.sec)}</div>` :
+    o.row === 'status' ? `<div class="cr">${[['unread', 'Unread'], ['reading', 'Reading'], ['finished', 'Done'], ['', 'Clear']].map(([k, l]) => `<button data-s="${k}">${l}</button>`).join('')}</div>` :
+    o.row === 'rate' ? `<div class="cr">${[1, 2, 3, 4, 5, 0].map(r => `<button data-r="${r}">${r ? r + '★' : '✕'}</button>`).join('')}</div>` :
+    `<button data-i="${i}"${o.danger ? ' class="danger"' : ''}>${esc(o.label)}</button>`).join('');
+  ctxEl.hidden = false; ctxEl.style.left = ctxEl.style.top = '0px';
+  const w = ctxEl.offsetWidth, h = ctxEl.offsetHeight;
+  ctxEl.style.left = Math.max(6, Math.min(x, innerWidth - w - 6)) + 'px'; ctxEl.style.top = Math.max(6, y + h > innerHeight - 6 ? y - h : y) + 'px';
+}
+ctxEl.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; hideCtx(); const list = ctxList;
+  if (b.dataset.i != null) ctxItems[+b.dataset.i].fn();
+  else if (b.dataset.s != null) bulkEdit(list, x => { x.status = b.dataset.s; }, 'Status updated');
+  else if (b.dataset.r != null) bulkEdit(list, x => { x.rating = +b.dataset.r; }, 'Rating updated');
+});
+document.addEventListener('mousedown', e => { if (!ctxEl.hidden && !ctxEl.contains(e.target)) hideCtx(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtx(); });
+addEventListener('resize', hideCtx); addEventListener('scroll', hideCtx, true);
 /* ---- phone: filter drawer + long-press multi-select ---- */
 $('#filtBtn').onclick = () => document.body.classList.toggle('sideopen');
 $('#scrim').onclick = () => document.body.classList.remove('sideopen');
@@ -2497,7 +2566,12 @@ $('#side').addEventListener('click', e => { if (e.target.closest('.it,[data-all]
     lp = setTimeout(() => { lp = null; selMode = true; selected.add(id); lastId = id; lpFired = Date.now(); navigator.vibrate && navigator.vibrate(15); refreshSelection(); }, 450);
   }, { passive: true });
   ['touchend', 'touchmove', 'touchcancel'].forEach(t => m.addEventListener(t, () => clearTimeout(lp), { passive: true }));
-  m.addEventListener('contextmenu', e => { if (e.target.closest('[data-id]')) e.preventDefault(); });
+  m.addEventListener('contextmenu', e => {
+    const c = e.target.closest('[data-id]'); if (!c) return; e.preventDefault();
+    if (matchMedia('(pointer:coarse)').matches) return;
+    if (!selected.has(c.dataset.id)) { selected = new Set([c.dataset.id]); lastId = c.dataset.id; refreshSelection(); }
+    showCtx(e.clientX, e.clientY);
+  });
 }
 
 /* ---- welcome / startup ---- */
