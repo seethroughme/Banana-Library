@@ -276,16 +276,19 @@ table{border:0;box-shadow:var(--shadow);border-radius:14px}th{background:transpa
 .grp{font-family:inherit;font-size:15px;letter-spacing:-.02em;border:0}.chip{border-radius:999px;border-color:transparent}
 @media(min-width:821px){#selbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:40;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);background:color-mix(in srgb,var(--panel) 92%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:8px 12px;max-width:92vw}}
 /* carousel */
-.car{position:relative;margin:0 -6px 22px}
-.track{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;perspective:1400px;padding:36px calc(50% - 126px) 0;scrollbar-width:none;outline:none}.track::-webkit-scrollbar{display:none}
-.car .card{flex:0 0 252px;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;padding:6px;background:none!important;box-shadow:none!important}
-.car .card.sel .cv{outline:3px solid var(--acc);outline-offset:3px}.car .cv{box-shadow:0 12px 34px rgba(0,0,0,.4)}
-.shelf{position:relative;z-index:1;height:16px;margin:-6px 4px 0;border-radius:4px 4px 12px 12px;background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 16%,var(--panel)),color-mix(in srgb,var(--ink) 6%,var(--panel2)));box-shadow:0 16px 30px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.35)}
-.cnav{position:absolute;top:170px;z-index:200;width:42px;height:42px;border-radius:50%;padding:0;font-size:22px;background:color-mix(in srgb,var(--panel) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow)}.cnav.l{left:10px}.cnav.r{right:10px}
-.ccap{margin:20px auto 0;max-width:760px;padding:0 18px;text-align:center;min-height:170px}
-.ccap b{display:block;font:700 24px/1.2 var(--serif)}.ccap .by{display:block;margin-top:4px;opacity:.85}.ccap small{display:block;margin-top:2px;color:var(--mute)}
-.ccap p{margin:14px 0 0;text-align:left;white-space:pre-line;line-height:1.6;max-height:11em;overflow:auto;color:color-mix(in srgb,var(--ink) 85%,transparent)}.ccap p.none{color:var(--mute);text-align:center;font-style:italic}
-@media(max-width:700px){.track{padding:28px calc(50% - 94px) 0}.car .card{flex-basis:188px}.cnav{display:none}.ccap b{font-size:20px}}
+.car{position:relative;margin:0 -6px 22px;--ch:360px}
+.track{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:28px calc(50% - (var(--ch)*.3333 + 6px)) 0;scrollbar-width:none;outline:none;overscroll-behavior-x:contain}.track::-webkit-scrollbar{display:none}
+.car .card{flex:0 0 calc(var(--ch)*.6667 + 12px);scroll-snap-align:center;scroll-snap-stop:always;padding:6px;background:none!important;box-shadow:none!important;backface-visibility:hidden}
+.car .card.sel .cv{outline:3px solid var(--acc);outline-offset:3px}.car .cv{box-shadow:0 12px 34px rgba(0,0,0,.45)}
+.shelf{position:relative;z-index:1;height:22px;margin:-8px 4px 0;border-radius:3px 3px 10px 10px;cursor:ns-resize;touch-action:none;outline:none;
+  background:repeating-linear-gradient(92deg,rgba(255,255,255,.05) 0 2px,rgba(0,0,0,.1) 2px 5px,rgba(255,255,255,.02) 5px 9px),linear-gradient(180deg,#5b3b22 0%,#3d2514 40%,#26160b 100%);
+  box-shadow:0 18px 32px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -3px 0 rgba(0,0,0,.4)}
+.shelf i{position:absolute;left:50%;top:50%;width:46px;height:4px;margin:-2px 0 0 -23px;border-radius:2px;background:rgba(255,255,255,.3)}.shelf:hover i,.shelf:focus-visible i{background:rgba(255,255,255,.6)}
+.cnav{position:absolute;top:calc(var(--ch)/2 + 10px);z-index:200;width:42px;height:42px;border-radius:50%;padding:0;font-size:22px;background:color-mix(in srgb,var(--panel) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow)}.cnav.l{left:10px}.cnav.r{right:10px}
+.ccap{margin:22px 0 0;padding:0 clamp(16px,3vw,44px)}
+.ccap b{display:block;text-align:center;font:700 26px/1.2 var(--serif)}.ccap .by{display:block;text-align:center;margin-top:4px;opacity:.85}.ccap small{display:block;text-align:center;margin-top:2px;color:var(--mute)}
+.ccap p{margin:16px 0 0;column-width:420px;column-gap:44px;text-align:left;hyphens:auto;white-space:pre-line;line-height:1.65;font-size:15px;color:color-mix(in srgb,var(--ink) 88%,transparent)}.ccap p.none{column-width:auto;text-align:center;color:var(--mute);font-style:italic}
+@media(max-width:700px){.car{--ch:300px}.cnav{display:none}.ccap b{font-size:20px}.ccap p{column-width:auto;font-size:14.5px}}
 </style>
 </head>
 <body>
@@ -348,6 +351,7 @@ table{border:0;box-shadow:var(--shadow);border-radius:14px}th{background:transpa
         <button data-act="colls">Manage collections…</button>
         <button data-act="rename">Rename / merge authors, series, tags…</button>
         <button data-act="dups">Find duplicates…</button>
+        <button data-act="reread">Re-read metadata from files…</button>
         <button data-act="device">Send to eReader…</button>
         <button data-act="reader">Reader files (browse / delete)…</button>
         <hr>
@@ -589,11 +593,12 @@ async function epubInfo(zip) {
 async function epubMeta(blob) {
   const zip = await openZip(blob), info = await epubInfo(zip), opf = info.opf;
   const first = n => { const e = ns(opf, n)[0]; return e ? e.textContent.trim() : ''; };
-  const m = { title: first('title'), authors: ns(opf, 'creator').map(e => e.textContent.trim()).filter(Boolean), publisher: first('publisher'), language: first('language'), comments: plain(first('description')), genres: uniq(ns(opf, 'subject').map(e => e.textContent.trim()).filter(Boolean)) };
+  const m = { title: first('title'), authors: ((c) => { const a = c.filter(e => { const r = e.getAttribute('opf:role'); return !r || r === 'aut'; }); return (a.length ? a : c).map(e => e.textContent.trim()).filter(Boolean); })(ns(opf, 'creator')), publisher: first('publisher'), language: first('language'), comments: plain(first('description')), genres: uniq(ns(opf, 'subject').map(e => e.textContent.trim()).filter(Boolean)) };
   const d = first('date'); if (/^\d{4}/.test(d)) m.pubdate = d.slice(0, 10);
   const metas = ns(opf, 'meta');
   const byName = n => { const e = metas.find(x => x.getAttribute('name') === n); return e ? e.getAttribute('content') : ''; };
   m.series = byName('calibre:series'); m.seriesIndex = byName('calibre:series_index');
+  { const rt = +byName('calibre:rating'); if (rt > 0) m.rating = Math.min(5, Math.round(rt / 2)); }
   if (!m.series) {
     const col = metas.find(x => x.getAttribute('property') === 'belongs-to-collection');
     if (col) {
@@ -610,6 +615,7 @@ async function epubMeta(blob) {
   let cov = [...info.manifest.values()].find(i => i.props.split(/\s+/).includes('cover-image'));
   if (!cov) { const cid = byName('cover'); if (cid) cov = info.manifest.get(cid); }
   if (!cov) cov = [...info.manifest.values()].find(i => i.type.startsWith('image/') && /cover/i.test(i.id + i.href));
+  if (!cov) cov = [...info.manifest.values()].find(i => i.type.startsWith('image/'));
   if (cov && zip.has(cov.href)) m.cover = new Blob([await zip.read(cov.href)], { type: cov.type });
   return m;
 }
@@ -625,7 +631,8 @@ async function comicMeta(blob) {
       m.series = g('Series'); m.seriesIndex = g('Number');
       m.title = g('Title') || (m.series && m.seriesIndex ? `${m.series} #${m.seriesIndex}` : '');
       const w = g('Writer') || g('Penciller'); if (w) m.authors = w.split(/\s*[,;]\s*/);
-      m.publisher = g('Publisher'); m.comments = g('Summary'); m.language = g('LanguageISO');
+      m.publisher = g('Publisher'); m.comments = g('Summary') || g('Notes'); m.language = g('LanguageISO');
+      { const cr = parseFloat(g('CommunityRating')); if (cr > 0) m.rating = Math.min(5, Math.round(cr)); }
       const gen = g('Genre'); if (gen) m.genres = splitList(gen);
       const tg = g('Tags'); if (tg) m.tags = splitList(tg);
       if (g('Year')) m.pubdate = `${g('Year')}-${(g('Month') || '1').padStart(2, '0')}-${(g('Day') || '1').padStart(2, '0')}`;
@@ -635,7 +642,65 @@ async function comicMeta(blob) {
   return m;
 }
 const comicImages = zip => zip.names().filter(n => IMG_RE.test(n) && !n.startsWith('__MACOSX/') && !n.split('/').pop().startsWith('.')).sort(natCmp);
+/* XTC / XTCH (Xteink): title, author, publisher, language and a cover from the first page */
+async function xtcMeta(blob) {
+  const rd = async (o, n) => new Uint8Array(await blob.slice(o, o + n).arrayBuffer());
+  const h = await rd(0, 64); if (h.length < 48) return {};
+  const dv = new DataView(h.buffer), mark = dv.getUint32(0, true); if (mark !== 0x00435458 && mark !== 0x48435458) return {};
+  const pages = dv.getUint16(6, true), metaOff = Number(dv.getBigUint64(16, true)), idxOff = Number(dv.getBigUint64(24, true));
+  const m = {}, good = x => x && !/[\u0000-\u001f\ufffd]/.test(x), str = (u, o, n) => td(u.subarray(o, o + n)).split('\0')[0].trim();
+  if (metaOff >= 48 && metaOff + 256 <= blob.size) {
+    const u = await rd(metaOff, 256), t = str(u, 0, 128), a = str(u, 128, 64), pb = str(u, 192, 32), lg = str(u, 224, 16);
+    if (good(t)) m.title = t; if (good(a)) m.authors = a.split(/\s*[,;&]\s*/).filter(Boolean); if (good(pb)) m.publisher = pb; if (good(lg)) m.language = lg;
+  }
+  try { const c = await xtcCover(blob, rd, idxOff, pages); if (c) m.cover = c; } catch { }
+  return m;
+}
+async function xtcCover(blob, rd, idxOff, pages) {
+  if (!pages || !idxOff || idxOff + 16 > blob.size) return null;
+  const e = new DataView((await rd(idxOff, 16)).buffer), off = Number(e.getBigUint64(0, true)), size = e.getUint32(8, true), w0 = e.getUint16(12, true), h0 = e.getUint16(14, true);
+  if (!off || !size || size > 6e6 || off + size > blob.size) return null;
+  const d = await rd(off, size), dv = new DataView(d.buffer), W = dv.getUint16(4, true) || w0, H = dv.getUint16(6, true) || h0;
+  if (!W || !H || W > 4000 || H > 4000 || dv.getUint8(9) !== 0) return null;      /* compressed pages are not decoded */
+  const bm = d.subarray(22), rowB = Math.ceil(W / 8), colB = Math.ceil(H / 8), g = new Uint8Array(W * H);
+  if (bm.length <= rowB * H + 64) {                                                /* 1-bit page (XTG) */
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) g[y * W + x] = (bm[y * rowB + (x >> 3)] >> (7 - (x & 7))) & 1 ? 255 : 0;
+  } else {                                                                         /* 2-bit page (XTH): two bit planes — try the plausible layouts, keep the smoothest picture */
+    const LUT = [255, 85, 170, 0], layouts = [
+      (x, y) => [(W - 1 - x) * colB + (y >> 3), 7 - (y & 7), colB * W], (x, y) => [x * colB + (y >> 3), 7 - (y & 7), colB * W], (x, y) => [y * rowB + (x >> 3), 7 - (x & 7), rowB * H]];
+    let best = null, bs = Infinity;
+    for (const L of layouts) {
+      const t = new Uint8Array(W * H); let sc = 0;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const [i, b, pl] = L(x, y); if (i + pl >= bm.length) return null; t[y * W + x] = LUT[(((bm[i] >> b) & 1) << 1) | ((bm[i + pl] >> b) & 1)]; }
+      for (let y = 0; y < H - 1; y += 2) for (let x = 0; x < W - 1; x += 2) { const v = t[y * W + x]; sc += Math.abs(v - t[y * W + x + 1]) + Math.abs(v - t[(y + 1) * W + x]); }
+      if (sc < bs) { bs = sc; best = t; }
+    }
+    g.set(best);
+  }
+  let sum = 0; for (let i = 0; i < g.length; i += 7) sum += g[i]; if (sum / Math.ceil(g.length / 7) < 70) for (let i = 0; i < g.length; i++) g[i] = 255 - g[i];   /* pages are mostly white */
+  const px = new Uint8ClampedArray(W * H * 4); for (let i = 0; i < g.length; i++) { px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = g[i]; px[i * 4 + 3] = 255; }
+  const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').putImageData(new ImageData(px, W, H), 0, 0);
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+}
+/* PDF: title / author / subject from the document info (or XMP) — no page rendering offline */
+async function pdfMeta(blob) {
+  const L = async (a, b) => new TextDecoder('latin1').decode(new Uint8Array(await blob.slice(a, b).arrayBuffer()));
+  const txt = (await L(0, 262144)) + '\n' + (blob.size > 524288 ? await L(blob.size - 262144, blob.size) : blob.size > 262144 ? await L(262144, blob.size) : '');
+  const dec = v => {
+    v = v.trim(); let u;
+    if (v[0] === '<') { const hx = v.replace(/[<>\s]/g, ''); if (!hx.length || hx.length % 2) return ''; u = new Uint8Array(hx.match(/../g).map(x => parseInt(x, 16))); }
+    else { v = v.slice(1, -1).replace(/\\([()\\])/g, '$1').replace(/\\[nr]/g, ' ').replace(/\\(\d{3})/g, (m, o) => String.fromCharCode(parseInt(o, 8))); u = Uint8Array.from(v, c => c.charCodeAt(0) & 255); }
+    return (u[0] === 0xFE && u[1] === 0xFF ? new TextDecoder('utf-16be').decode(u.subarray(2)) : new TextDecoder('latin1').decode(u)).replace(/\0/g, '').trim();
+  };
+  const get = k => { const r = new RegExp('/' + k + '\\s*(\\((?:\\\\.|[^\\\\)])*\\)|<[0-9A-Fa-f\\s]*>)').exec(txt); return r ? dec(r[1]) : ''; };
+  const xmp = /<dc:title>\s*<rdf:Alt>\s*<rdf:li[^>]*>([^<]+)/.exec(txt);
+  let t = get('Title') || (xmp ? xmp[1].trim() : ''); if (/^(untitled|microsoft word)/i.test(t) || /\.(docx?|indd|pdf)$/i.test(t)) t = '';
+  const a = get('Author'), m = {}; if (t) m.title = t; if (a) m.authors = a.split(/\s*[;,&]\s*|\s+and\s+/).filter(Boolean); const sb = get('Subject'); if (sb) m.comments = sb;
+  return m;
+}
 async function extractMeta(file, ext) {
+  if (ext === 'xtc' || ext === 'xtch') return xtcMeta(file);
+  if (ext === 'pdf') return pdfMeta(file);
   if (ext === 'epub') return epubMeta(file);
   if (ext === 'cbz' || ext === 'zip') return comicMeta(file);
   return {};
@@ -1002,6 +1067,9 @@ async function addBook(file, { dup = 'merge' } = {}) {
       await writeFile(ex._dir, name, file); await verify(ex._dir, name);
       ex.formats.push({ ext, file: name, size: file.size });
       if (!ex.hasCover && m.cover) { const cb = await makeCover(m.cover); if (cb) { await writeFile(ex._dir, 'cover.jpg', cb); ex.hasCover = true; } }
+      for (const k of ['series', 'seriesIndex', 'publisher', 'language', 'pubdate', 'comments', 'isbn']) if (!ex[k] && m[k]) ex[k] = m[k];
+      for (const k of ['genres', 'tags']) if (!(ex[k] || []).length && (m[k] || []).length) ex[k] = m[k];
+      if (!ex.rating && m.rating) ex.rating = m.rating;
       ex.modified = now; await saveMeta(ex);
       return { status: 'merged', rec: ex };
     }
@@ -1009,7 +1077,7 @@ async function addBook(file, { dup = 'merge' } = {}) {
   const id = crypto.randomUUID().slice(0, 8), fname = `${sanitize(title)} - ${sanitize(authors[0])}.${ext}`;
   const rec = {
     id, title, authors, series: m.series || '', seriesIndex: m.seriesIndex || '', genres: m.genres || [], tags: m.tags || [],
-    publisher: m.publisher || '', language: m.language || '', pubdate: m.pubdate || '', comments: m.comments || '', isbn: m.isbn || '', rating: 0, collections: [], status: '',
+    publisher: m.publisher || '', language: m.language || '', pubdate: m.pubdate || '', comments: m.comments || '', isbn: m.isbn || '', rating: m.rating || 0, collections: [], status: '',
     added: now, modified: now, hasCover: false, formats: [{ ext, file: fname, size: file.size }]
   };
   const segs = layoutSegments(rec), bn = `${sanitize(title)} (${id})`;
@@ -2469,6 +2537,7 @@ $('#pop').onclick = async e => {
     if (a === 'colls') collsDialog();
     if (a === 'rename') renameDialog();
     if (a === 'dups') dupDialog();
+    if (a === 'reread') { const l = selBooks(); rereadDialog(l.length ? l : books); }
     if (a === 'device') sendDialog([]);
     if (a === 'reader') readerFilesDialog();
     if (a === 'backupZip') await backupZip();
@@ -2553,31 +2622,84 @@ addEventListener('keydown', e => {
 });
 
 /* ---- carousel (cover-flow) view ---- */
-const carHTML = list => `<div class="car"><button class="cnav l" aria-label="Previous">‹</button><div class="track">${list.map(b => `<div class="card${selected.has(b.id) ? ' sel' : ''}" data-id="${b.id}"><div class="cv" data-id="${b.id}">${ph(b)}<span class="ck">${ic('check')}</span></div></div>`).join('')}</div><button class="cnav r" aria-label="Next">›</button><div class="shelf"></div><div class="ccap"></div></div>`;
+let carFocus = null;
+const carHTML = list => `<div class="car" style="--ch:${prefs.carH || 360}px"><button class="cnav l" aria-label="Previous">‹</button><div class="track">${list.map(b => `<div class="card${selected.has(b.id) ? ' sel' : ''}" data-id="${b.id}"><div class="cv" data-id="${b.id}">${ph(b)}<span class="ck">${ic('check')}</span></div></div>`).join('')}</div><button class="cnav r" aria-label="Next">›</button><div class="shelf" tabindex="0" title="Drag up or down to resize the covers · double-click to reset"><i></i></div><div class="ccap"></div></div>`;
 function wireCarousels() {
   document.querySelectorAll('#main .car').forEach(car => {
-    const tr = car.querySelector('.track'), cap = car.querySelector('.ccap'), cards = [...tr.children]; if (!cards.length) return;
-    let raf = 0, active = -1;
+    const tr = car.querySelector('.track'), cap = car.querySelector('.ccap'), shelf = car.querySelector('.shelf'), cards = [...tr.children]; if (!cards.length) return;
+    let cx = [], st = [], active = -1, want = null, raf = 0, timer = 0;
+    const measure = () => { cx = cards.map(c => c.offsetLeft + c.offsetWidth / 2); };
+    const center = (i, instant) => { i = Math.max(0, Math.min(cards.length - 1, i)); want = i; tr.scrollTo({ left: cx[i] - tr.clientWidth / 2, behavior: instant ? 'instant' : 'smooth' }); };
+    const caption = b => { cap.innerHTML = `<b>${esc(b.title)}</b><span class="by">${esc(b.authors.join(', '))}${b.series ? ` · ${esc(b.series)}${b.seriesIndex ? ' #' + esc(b.seriesIndex) : ''}` : ''}</span><small>${esc(b.formats.map(x => x.ext.toUpperCase()).join(' · '))}${b.rating ? ' · ' + '★'.repeat(b.rating) : ''}</small>${b.comments ? `<p>${esc(b.comments)}</p>` : '<p class="none">No description yet — right-click the book and choose Fetch metadata.</p>'}`; };
     const upd = () => {
-      raf = 0; const mid = tr.scrollLeft + tr.clientWidth / 2; let best = 0, bd = 1e9;
-      cards.forEach((c, i) => {
-        const d = (c.offsetLeft + c.offsetWidth / 2 - mid) / c.offsetWidth, a = Math.abs(d);
-        c.style.transform = `translateZ(${-Math.min(a, 3) * 60}px) rotateY(${Math.max(-50, Math.min(50, -d * 22))}deg) scale(${Math.max(.62, 1 - a * .1)})`;
-        c.style.opacity = Math.max(.35, 1 - a * .16); c.style.zIndex = 100 - Math.round(a * 10); if (a < bd) { bd = a; best = i; }
-      });
-      if (best !== active) {
-        active = best; const b = books.find(x => x.id === cards[best].dataset.id);
-        if (b) cap.innerHTML = `<b>${esc(b.title)}</b><span class="by">${esc(b.authors.join(', '))}${b.series ? ` · ${esc(b.series)}${b.seriesIndex ? ' #' + esc(b.seriesIndex) : ''}` : ''}</span><small>${esc(b.formats.map(x => x.ext.toUpperCase()).join(' · '))}${b.rating ? ' · ' + '★'.repeat(b.rating) : ''}</small>${b.comments ? `<p>${esc(b.comments)}</p>` : '<p class="none">No description yet — right-click the book and choose Fetch metadata.</p>'}`;
+      raf = 0; const mid = tr.scrollLeft + tr.clientWidth / 2, w = cards[0].offsetWidth; let best = 0, bd = 1e9;
+      for (let i = 0; i < cards.length; i++) {
+        const d = (cx[i] - mid) / w, a = Math.abs(d); if (a < bd) { bd = a; best = i; }
+        if (a > 4.5 && st[i] === 'far') continue;
+        const ac = Math.min(a, 3), t = `perspective(1100px) rotateY(${(d < 0 ? 1 : -1) * Math.min(a, 2) * 22}deg) scale(${(1 - ac * .09).toFixed(3)}) translateZ(${(-ac * 30).toFixed(0)}px)`, o = Math.max(.4, 1 - a * .15).toFixed(2), z = String(100 - Math.round(a * 10));
+        const key = t + o + z; if (st[i] !== key) { st[i] = a > 4.5 ? 'far' : key; const c = cards[i]; c.style.transform = t; c.style.opacity = o; c.style.zIndex = z; }
       }
+      if (best !== active) { active = best; carFocus = cards[best].dataset.id; const b = books.find(x => x.id === carFocus); if (b) caption(b); }
     };
-    tr.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(upd); }, { passive: true });
-    const go = dir => tr.scrollBy({ left: dir * cards[0].offsetWidth * 1.1, behavior: 'smooth' });
+    tr.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(upd); clearTimeout(timer); timer = setTimeout(() => { want = null; }, 180); }, { passive: true });
+    const go = dir => center((want ?? active) + dir);
     car.querySelector('.cnav.l').onclick = () => go(-1); car.querySelector('.cnav.r').onclick = () => go(1);
-    tr.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) tr.scrollTo({ left: c.offsetLeft + c.offsetWidth / 2 - tr.clientWidth / 2, behavior: 'smooth' }); });
+    tr.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) center(cards.indexOf(c)); });
     tr.tabIndex = 0; tr.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { go(e.key === 'ArrowRight' ? 1 : -1); e.preventDefault(); } });
-    if (window.ResizeObserver) new ResizeObserver(upd).observe(tr);
-    upd();
+    /* layout changes (detail panel opening, window resize, shelf drag): keep the same book centred instead of letting snap pick a neighbour */
+    let first = true;
+    const relayout = () => { measure(); st = []; if (first) { first = false; const i = cards.findIndex(c => c.dataset.id === carFocus); center(i > 0 ? i : 0, true); } else center(want ?? Math.max(0, active), true); upd(); };
+    if (window.ResizeObserver) new ResizeObserver(() => { if (tr.clientWidth) relayout(); }).observe(tr); else relayout();
+    const setH = h => { h = Math.round(Math.max(180, Math.min(h, Math.min(innerHeight * .75, 640)))); document.querySelectorAll('#main .car').forEach(c => c.style.setProperty('--ch', h + 'px')); prefs.carH = h; return h; };
+    let drag = null;
+    shelf.addEventListener('pointerdown', e => { drag = { y: e.clientY, h: parseFloat(getComputedStyle(car).getPropertyValue('--ch')) || 360 }; shelf.setPointerCapture(e.pointerId); e.preventDefault(); });
+    shelf.addEventListener('pointermove', e => { if (drag) { setH(drag.h + (e.clientY - drag.y)); relayout(); } });
+    const end = () => { if (drag) { drag = null; savePrefs(); } }; shelf.addEventListener('pointerup', end); shelf.addEventListener('pointercancel', end);
+    shelf.addEventListener('dblclick', () => { setH(360); relayout(); savePrefs(); });
+    shelf.addEventListener('keydown', e => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { setH((parseFloat(getComputedStyle(car).getPropertyValue('--ch')) || 360) + (e.key === 'ArrowDown' ? 24 : -24)); relayout(); savePrefs(); e.preventDefault(); } });
   });
+}
+/* ---- re-read metadata and covers from the book files ---- */
+async function rereadBooks(list, { over, cov }) {
+  const ORDER = ['epub', 'xtch', 'xtc', 'cbz', 'zip', 'pdf'], SC = ['series', 'seriesIndex', 'publisher', 'language', 'pubdate', 'comments', 'isbn'];
+  let changed = 0, covers = 0, nothing = 0, failed = 0; const moved = [];
+  try {
+    for (let i = 0; i < list.length; i++) {
+      const b = list[i]; busy(`Reading ${i + 1} of ${list.length}: ${b.title}`, (i / list.length) * 100); await tick();
+      const f = ORDER.map(e => b.formats.find(x => x.ext === e)).find(Boolean); if (!f) { nothing++; continue; }
+      try {
+        const m = await extractMeta(await fmtFile(b, f), f.ext); let t = false, reTitle = false;
+        for (const k of SC) if (m[k] && (over || !b[k]) && b[k] !== m[k]) { b[k] = m[k]; t = true; }
+        if (over && m.title && m.title !== b.title) { b.title = m.title; t = reTitle = true; }
+        const unk = !b.authors.length || (b.authors.length === 1 && b.authors[0] === 'Unknown');
+        if (m.authors?.length && (over || unk) && b.authors.join('|') !== m.authors.join('|')) { b.authors = m.authors; t = reTitle = true; }
+        for (const k of ['genres', 'tags']) if (m[k]?.length && (over ? b[k].join('|') !== m[k].join('|') : !b[k].length)) { b[k] = m[k]; t = true; }
+        if (m.rating && (over || !b.rating) && b.rating !== m.rating) { b.rating = m.rating; t = true; }
+        if (m.cover && cov !== 'none' && (cov === 'all' || !b.hasCover)) {
+          const cb = await makeCover(m.cover);
+          if (cb) { await writeFile(b._dir, 'cover.jpg', cb); b.hasCover = true; const old = coverCache.get(b.id); if (old) { URL.revokeObjectURL(old); coverCache.delete(b.id); } covers++; t = true; }
+        }
+        if (t) { b.modified = new Date().toISOString(); await saveMeta(b); changed++; if (reTitle) moved.push(b); } else if (!Object.keys(m).length) nothing++;
+      } catch (e) { console.warn('re-read', b.title, e); failed++; }
+    }
+    if (moved.length) await organize(moved);
+  } finally { unbusy(); }
+  render();
+  toast(`Updated ${changed} of ${list.length} book${list.length === 1 ? '' : 's'}${covers ? ` · ${covers} cover${covers === 1 ? '' : 's'}` : ''}${nothing ? ` · ${nothing} had nothing readable` : ''}${failed ? ` · ${failed} failed` : ''}`);
+}
+function rereadDialog(list) {
+  const n = list.length; if (!n) return toast('No books to read');
+  const box = modal(`<h3>Re-read metadata from files</h3>
+    <p class="mute">Reads title, authors, description, series, publisher, language, date, ISBN, rating and cover straight from the book files of ${n} book${n === 1 ? '' : 's'} (EPUB, CBZ/ZIP, XTC/XTCH and PDF files; other formats are skipped).</p>
+    <label class="l">What to update</label><select id="rr_m"><option value="fill">Only fill in what’s empty (safe)</option><option value="over">Overwrite with what the file says</option></select>
+    <label class="l">Covers</label><select id="rr_c"><option value="miss">Only add missing covers</option><option value="all">Replace covers with the one from the file</option><option value="none">Leave covers alone</option></select>
+    <div class="btns"><button class="primary" id="rr_go">Re-read ${n} book${n === 1 ? '' : 's'}</button><button id="rr_no">Cancel</button></div>`);
+  box.querySelector('#rr_no').onclick = closeModal;
+  box.querySelector('#rr_go').onclick = () => {
+    const over = box.querySelector('#rr_m').value === 'over', cov = box.querySelector('#rr_c').value;
+    if (over && !confirm('Overwrite existing titles, authors, descriptions and tags with what the files contain?')) return;
+    closeModal(); rereadBooks(list, { over, cov });
+  };
 }
 /* ---- right-click / "more" menu for books ---- */
 const ctxEl = document.createElement('div'); ctxEl.id = 'ctx'; ctxEl.hidden = true; document.body.appendChild(ctxEl);
@@ -2588,6 +2710,7 @@ function showCtx(x, y) {
   const add = (label, fn, o = {}) => it.push({ label, fn, ...o }), sep = () => { if (it.length && !it[it.length - 1].sep) it.push({ sep: 1 }); };
   add(n > 1 ? `Fetch metadata (${n})` : 'Fetch metadata', () => startFetch(list));
   add('Send to eReader…', () => sendDialog(list));
+  add('Re-read metadata from files…', () => rereadDialog(list));
   sep(); it.push({ sec: 'Collections' });
   const names = uniq([...colls, ...books.flatMap(b => b.collections)]).sort(natCmp);
   for (const nm of names.slice(0, 6)) { const all = list.every(b => b.collections.includes(nm)); add((all ? '✓ ' : '') + nm, () => all ? bulkEdit(list, b => { b.collections = b.collections.filter(c => c !== nm); }, `Removed from “${nm}”`) : addToCollection(list, nm)); }
