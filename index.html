@@ -276,13 +276,16 @@ table{border:0;box-shadow:var(--shadow);border-radius:14px}th{background:transpa
 .grp{font-family:inherit;font-size:15px;letter-spacing:-.02em;border:0}.chip{border-radius:999px;border-color:transparent}
 @media(min-width:821px){#selbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:40;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);background:color-mix(in srgb,var(--panel) 92%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:8px 12px;max-width:92vw}}
 /* carousel */
-.car{position:relative;margin:0 -6px 18px}
-.track{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;perspective:1100px;padding:30px calc(50% - 84px) 14px;scrollbar-width:none;outline:none}.track::-webkit-scrollbar{display:none}
-.car .card{flex:0 0 168px;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;padding:6px;background:none!important;box-shadow:none!important}
-.car .card.sel .cv{outline:3px solid var(--acc);outline-offset:3px}.car .cv{box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.cnav{position:absolute;top:38%;z-index:200;width:40px;height:40px;border-radius:50%;padding:0;font-size:22px;background:color-mix(in srgb,var(--panel) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow)}.cnav.l{left:8px}.cnav.r{right:8px}
-.ccap{text-align:center;display:flex;flex-direction:column;gap:2px;min-height:58px;padding:0 16px}.ccap b{font:700 18px/1.2 var(--serif)}.ccap span{opacity:.8}.ccap small{color:var(--mute)}
-@media(max-width:700px){.track{padding-inline:calc(50% - 64px)}.car .card{flex-basis:128px}.cnav{display:none}}
+.car{position:relative;margin:0 -6px 22px}
+.track{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;perspective:1400px;padding:36px calc(50% - 126px) 0;scrollbar-width:none;outline:none}.track::-webkit-scrollbar{display:none}
+.car .card{flex:0 0 252px;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;padding:6px;background:none!important;box-shadow:none!important}
+.car .card.sel .cv{outline:3px solid var(--acc);outline-offset:3px}.car .cv{box-shadow:0 12px 34px rgba(0,0,0,.4)}
+.shelf{position:relative;z-index:1;height:16px;margin:-6px 4px 0;border-radius:4px 4px 12px 12px;background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 16%,var(--panel)),color-mix(in srgb,var(--ink) 6%,var(--panel2)));box-shadow:0 16px 30px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.35)}
+.cnav{position:absolute;top:170px;z-index:200;width:42px;height:42px;border-radius:50%;padding:0;font-size:22px;background:color-mix(in srgb,var(--panel) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:var(--shadow)}.cnav.l{left:10px}.cnav.r{right:10px}
+.ccap{margin:20px auto 0;max-width:760px;padding:0 18px;text-align:center;min-height:170px}
+.ccap b{display:block;font:700 24px/1.2 var(--serif)}.ccap .by{display:block;margin-top:4px;opacity:.85}.ccap small{display:block;margin-top:2px;color:var(--mute)}
+.ccap p{margin:14px 0 0;text-align:left;white-space:pre-line;line-height:1.6;max-height:11em;overflow:auto;color:color-mix(in srgb,var(--ink) 85%,transparent)}.ccap p.none{color:var(--mute);text-align:center;font-style:italic}
+@media(max-width:700px){.track{padding:28px calc(50% - 94px) 0}.car .card{flex-basis:188px}.cnav{display:none}.ccap b{font-size:20px}}
 </style>
 </head>
 <body>
@@ -2550,7 +2553,7 @@ addEventListener('keydown', e => {
 });
 
 /* ---- carousel (cover-flow) view ---- */
-const carHTML = list => `<div class="car"><button class="cnav l" aria-label="Previous">‹</button><div class="track">${list.map(b => `<div class="card${selected.has(b.id) ? ' sel' : ''}" data-id="${b.id}"><div class="cv" data-id="${b.id}">${ph(b)}<span class="ck">${ic('check')}</span></div></div>`).join('')}</div><button class="cnav r" aria-label="Next">›</button><div class="ccap"></div></div>`;
+const carHTML = list => `<div class="car"><button class="cnav l" aria-label="Previous">‹</button><div class="track">${list.map(b => `<div class="card${selected.has(b.id) ? ' sel' : ''}" data-id="${b.id}"><div class="cv" data-id="${b.id}">${ph(b)}<span class="ck">${ic('check')}</span></div></div>`).join('')}</div><button class="cnav r" aria-label="Next">›</button><div class="shelf"></div><div class="ccap"></div></div>`;
 function wireCarousels() {
   document.querySelectorAll('#main .car').forEach(car => {
     const tr = car.querySelector('.track'), cap = car.querySelector('.ccap'), cards = [...tr.children]; if (!cards.length) return;
@@ -2564,7 +2567,7 @@ function wireCarousels() {
       });
       if (best !== active) {
         active = best; const b = books.find(x => x.id === cards[best].dataset.id);
-        if (b) cap.innerHTML = `<b>${esc(b.title)}</b><span>${esc(b.authors.join(', '))}${b.series ? ` · ${esc(b.series)}${b.seriesIndex ? ' #' + esc(b.seriesIndex) : ''}` : ''}</span><small>${esc(b.formats.map(x => x.ext.toUpperCase()).join(' · '))}${b.rating ? ' · ' + '★'.repeat(b.rating) : ''}</small>`;
+        if (b) cap.innerHTML = `<b>${esc(b.title)}</b><span class="by">${esc(b.authors.join(', '))}${b.series ? ` · ${esc(b.series)}${b.seriesIndex ? ' #' + esc(b.seriesIndex) : ''}` : ''}</span><small>${esc(b.formats.map(x => x.ext.toUpperCase()).join(' · '))}${b.rating ? ' · ' + '★'.repeat(b.rating) : ''}</small>${b.comments ? `<p>${esc(b.comments)}</p>` : '<p class="none">No description yet — right-click the book and choose Fetch metadata.</p>'}`;
       }
     };
     tr.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(upd); }, { passive: true });
